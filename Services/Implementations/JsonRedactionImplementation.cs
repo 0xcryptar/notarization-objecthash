@@ -40,8 +40,38 @@ namespace ObjectHashServer.Services.Implementations
                         RecursivlyRedactJson((JObject)json[x.Key], (JObject)x.Value);
                         break;
                     case JTokenType.Array:
-                        // TODO: implement
-                        throw new BadRequestException("The redactSetting JSON is invalid. It can only contain a nested JSON and the data type Boolean.");
+                        JArray jsonArray;
+
+                        try
+                        {
+                            jsonArray = (JArray)json[x.Key];
+                        } catch(Exception) // TODO: check the Exception type and only catch the subset
+                        {
+                            throw new BadRequestException("The corresponding JSON object is not an array, but the redactSetting requiers one.");
+                        }
+                  
+                        // check if the arrays have the same size
+                        if (jsonArray.Count != ((JArray)value).Count) {
+                            throw new BadRequestException("The corresponding JSON object has an array that is different in size from the redactSetting. They need to be equal.");
+                        }
+
+                        // for each element in the array apply the redact function
+                        for (int i = 0; i < jsonArray.Count; i++)
+                        {
+                            try
+                            {
+                                if ((bool)((JArray)value)[i])
+                                {
+                                    ObjectHashImplementation h = new ObjectHashImplementation();
+                                    h.HashAny(jsonArray[i]);
+                                    jsonArray[i] = "**REDACTED**" + h.ToHex();
+                                }
+                            } catch (FormatException)
+                            {
+                                throw new BadRequestException("The redactSetting JSON is invalid. It can only contain a nested JSON and the data type Boolean.");
+                            }
+                        }
+                        break;
                     default:
                         throw new BadRequestException("The redactSetting JSON is invalid. It can only contain a nested JSON and the data type Boolean.");
                 }
