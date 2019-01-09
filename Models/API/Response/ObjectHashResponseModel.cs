@@ -16,11 +16,11 @@ namespace ObjectHashServer.Models.API.Response
         }
 
         // required
-        public JObject Data { get; set; }
+        public JToken Data { get; set; }
         // required
         public string Hash { get; set; }
         // optional
-        public JObject RedactSettings { get; set; }
+        public JToken RedactSettings { get; set; }
         // optional
         public string Salt { get; set; }
     }

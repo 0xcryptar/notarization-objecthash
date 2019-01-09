@@ -20,8 +20,8 @@ namespace ObjectHashServer.Models
             Salt = model.Salt;
         }
 
-        public JObject Data { get; set; }
-        public JObject RedactSettings { get; set; }
+        public JToken Data { get; set; }
+        public JToken RedactSettings { get; set; }
         public string Salt { get; set; }
 
         // returns calculated Hash
@@ -37,7 +37,7 @@ namespace ObjectHashServer.Models
         }
 
         // returns Data JObject where fields are redacted with the ShareSettings
-        public JObject RedactedData
+        public JToken RedactedData
         {
             get
             {

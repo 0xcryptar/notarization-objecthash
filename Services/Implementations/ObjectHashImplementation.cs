@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 /*
@@ -32,57 +31,56 @@ namespace ObjectHashServer.Services.Implementations
             digester = HashAlgorithm.Create(SHA256);
         }
 
-        // hash enty point
-        public void HashAny(object obj)
+        // hash entry point
+        public void HashAny(JToken json)
         {
-            hash = (sbyte[])(Array)digester.ComputeHash(Encoding.UTF8.GetBytes(obj.ToString()));
+            hash = (sbyte[])(Array)digester.ComputeHash(Encoding.UTF8.GetBytes(json.ToString()));
             return;
 
-            // TODO: finish
             /*
-            JsonType outerType = GetType(obj);
-            switch (outerType)
+            switch (json.Type)
             {
-                case JsonType.ARRAY:
+                case JTokenType.Array:
                 {
-                    HashList((JArray)obj);
+                    HashList((JArray)json);
                     break;
                 }
-                case JsonType.OBJECT:
+                case JTokenType.Object:
                 {
-                    HashObject((JObject)obj);
+                    HashObject((JObject)json);
                     break;
                 }
-                case JsonType.INT:
+                case JTokenType.Integer:
                 {
-                    HashInteger(obj);
+                    HashInteger((int)json);
                     break;
                 }
-                case JsonType.STRING:
+                case JTokenType.String:
                 {
-                    HashString((string)obj);
+                    HashString((string)json);
                     break;
                 }
-                case JsonType.NULL:
+                case JTokenType.Null:
                 {
                     HashNull();
                     break;
                 }
-                case JsonType.BOOLEAN:
+                case JTokenType.Boolean:
                 {
-                    HashBoolean((bool)obj);
+                    HashBoolean((bool)json);
                     break;
                 }
-                case JsonType.FLOAT:
+                case JTokenType.Float:
                 {
-                    HashDouble((double)obj);
+                    HashDouble((double)json);
                     break;
                 }
                 default:
                 {
-                    throw new Exception("Illegal type in JSON: " + obj.GetType());
+                    throw new Exception("Illegal type in JSON: " + json.Type);
                 }
-            } */
+            } 
+            */
         }
 
         private void HashTaggedBytes(char tag, byte[] bytes)
@@ -129,10 +127,10 @@ namespace ObjectHashServer.Services.Implementations
         private void HashList(JArray list)
         {
             var objectHashList = new List<ObjectHashImplementation>();
-            for (int n = 0; n < list.Count; ++n)
+            for (int i = 0; i < list.Count; i++)
             {
                 ObjectHashImplementation innerObject = new ObjectHashImplementation();
-                innerObject.HashAny(list[n]);
+                innerObject.HashAny(list[i]);
                 objectHashList.Add(innerObject);
             }
             byte[] merged = new byte[objectHashList.Sum(x => x.hash?.Length ?? 0) + 1];
@@ -220,46 +218,9 @@ namespace ObjectHashServer.Services.Implementations
             return h;
         }
 
-        private static JTokenType GetType(JObject jsonObj)
+        private static JTokenType GetType(JToken json)
         {
-            return jsonObj.Type;
-
-            // TODO: check if needed
-            /*
-            if (jsonObj is null || (jsonObj as JValue)?.Type == JTokenType.Null)
-            {
-                return JsonType.NULL;
-            }
-            else if (jsonObj is JArray)
-            {
-                return JsonType.ARRAY;
-            }
-            else if (jsonObj is JObject)
-            {
-                return JsonType.OBJECT;
-            }
-            else if (jsonObj is string)
-            {
-                return JsonType.STRING;
-            }
-            else if (jsonObj is int || jsonObj is long)
-            {
-                return JsonType.INT;
-            }
-            else if (jsonObj is double)
-            {
-                return JsonType.FLOAT;
-            }
-            else if (jsonObj is bool)
-            {
-                return JsonType.BOOLEAN;
-            }
-            else
-            {
-                Console.WriteLine("jsonObj is_a " + jsonObj.GetType());
-                return JsonType.UNKNOWN;
-            }
-            */
+            return json.Type;
         }
 
         public override bool Equals(object obj)

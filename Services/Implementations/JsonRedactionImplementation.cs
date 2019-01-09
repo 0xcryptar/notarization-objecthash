@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
 
@@ -7,75 +6,77 @@ namespace ObjectHashServer.Services.Implementations
 {
     public class JsonRedactionImplementation
     {
-        public JObject RedactJson(JObject json, JObject redactSettings)
+        public JToken RedactJson(JToken json, JToken redactSettings)
         {
-            JObject jsonClone = (JObject)json.DeepClone();
+            JToken jsonClone = json.DeepClone();
             // only work on the deep cloned data
             return RecursivlyRedactJson(jsonClone, redactSettings);
         }
 
-        private JObject RecursivlyRedactJson(JObject json, JObject redactSettings)
+        private JToken RecursivlyRedactJson(JToken json, JToken redactSettings)
         {
-            foreach (var x in redactSettings)
+            switch (redactSettings.Type)
             {
-                // check if key of redact settings is also present in JSON
-                if(!json.ContainsKey(x.Key))
-                {
-                    throw new BadRequestException("The presented redactSetting does not match the data JSON object.");
-                }
+                case JTokenType.Boolean:
+                    if ((bool)redactSettings)
+                    {
+                        ObjectHashImplementation h = new ObjectHashImplementation();
+                        h.HashAny(json);
+                        return "**REDACTED**" + h.ToHex();
+                    }
 
-                JToken value = x.Value;
-                switch (value.Type)
-                {
-                    case JTokenType.Boolean:
-                        if (value.ToObject<bool>())
-                        {
-                            ObjectHashImplementation h = new ObjectHashImplementation();
-                            h.HashAny(json[x.Key]);
-                            json[x.Key] = "**REDACTED**" + h.ToHex();
-                        }
-
-                        break;
-                    case JTokenType.Object:
-                        RecursivlyRedactJson((JObject)json[x.Key], (JObject)x.Value);
-                        break;
-                    case JTokenType.Array:
-                        JArray jsonArray;
-
-                        try
-                        {
-                            jsonArray = (JArray)json[x.Key];
-                        } catch(Exception) // TODO: check the Exception type and only catch the subset
-                        {
-                            throw new BadRequestException("The corresponding JSON object is not an array, but the redactSetting requiers one.");
-                        }
-                  
-                        // check if the arrays have the same size
-                        if (jsonArray.Count != ((JArray)value).Count) {
-                            throw new BadRequestException("The corresponding JSON object has an array that is different in size from the redactSetting. They need to be equal.");
-                        }
-
-                        // for each element in the array apply the redact function
-                        for (int i = 0; i < jsonArray.Count; i++)
-                        {
-                            try
-                            {
-                                if ((bool)((JArray)value)[i])
-                                {
-                                    ObjectHashImplementation h = new ObjectHashImplementation();
-                                    h.HashAny(jsonArray[i]);
-                                    jsonArray[i] = "**REDACTED**" + h.ToHex();
-                                }
-                            } catch (FormatException)
-                            {
-                                throw new BadRequestException("The redactSetting JSON is invalid. It can only contain a nested JSON and the data type Boolean.");
-                            }
-                        }
-                        break;
-                    default:
-                        throw new BadRequestException("The redactSetting JSON is invalid. It can only contain a nested JSON and the data type Boolean.");
-                }
+                    return json;
+                case JTokenType.Object:
+                    try
+                    {
+                        return RedactObject((JObject)json, (JObject)redactSettings);
+                    }
+                    catch (InvalidCastException)
+                    {
+                        throw new BadRequestException("The provided JSON does not contains an object -> {} where the readact settings require one. Please check the JSON data or the redact settings.");
+                    }
+                case JTokenType.Array:
+                    try {
+                        return RedactArray((JArray)json, (JArray)redactSettings);
+                    } catch(InvalidCastException)
+                    {
+                        throw new BadRequestException("The provided JSON does not contain an array -> [] where the readact settings require one. Please check the JSON data or the redact settings");
+                    }
+                default:
+                    throw new BadRequestException("The redact setting JSON is invalid. It can only contain a nested JSON, arrays and the data type Boolean.");
             }
+        }
+
+        private JToken RedactObject(JObject json, JObject redactSettings)
+        {
+            foreach (var redactSetting in redactSettings)
+            {
+                // check if Json object has same keys as the redact settings
+                if (!json.ContainsKey(redactSetting.Key))
+                {
+                    throw new BadRequestException("The provided JSON has an object which is different from the object defined in the readact settings. Please check the JSON data or the redact settings.");
+                }
+
+                json[redactSetting.Key] = RecursivlyRedactJson(json[redactSetting.Key], redactSettings[redactSetting.Key]);
+            }
+
+            return json;
+        }
+
+        private JToken RedactArray(JArray json, JArray redactSettings)
+        {
+            // check if the arrays have same size
+            if (redactSettings.Count != json.Count)
+            {
+                throw new BadRequestException("The corresponding JSON object contains an array that is different in size from the redact settings array. They need to be equaly long.");
+            }
+
+            // for each element in the array apply the redact function
+            for (int i = 0; i < redactSettings.Count; i++)
+            {
+                json[i] = RecursivlyRedactJson(json[i], redactSettings[i]);
+            }
+
             return json;
         }
     }

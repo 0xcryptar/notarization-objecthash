@@ -7,9 +7,9 @@ namespace ObjectHashServer.Models.API.Request
     public class ObjectHashRequestModel
     {
         [Required]
-        public JObject Data { get; set; }
+        public JToken Data { get; set; }
         // optional
-        public JObject RedactSettings { get; set; }
+        public JToken RedactSettings { get; set; }
         // optional
         public string Salt { get; set; }
     }
