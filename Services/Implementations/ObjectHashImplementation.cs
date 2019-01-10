@@ -6,15 +6,13 @@ using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json.Linq;
 
-/*
- * This is a C# implementation of the original ObjectHash
- * libaray from Ben Laurie. The source code of may
- * other implementations can be found here:
- * 
- * https://github.com/benlaurie/objecthash
- */
 namespace ObjectHashServer.Services.Implementations
 {
+    /// <summary>
+    /// This is the C# implementation of the original ObjectHash libaray
+    /// from Ben Laurie. The source code of may other implementations can 
+    /// be found here: https://github.com/benlaurie/objecthash
+    /// </summary>
     public class ObjectHashImplementation : IComparable<ObjectHashImplementation>
     {
         // constants
@@ -22,22 +20,33 @@ namespace ObjectHashServer.Services.Implementations
         private static string SHA256 = "SHA-256";
 
         // private variables
-        private sbyte[] hash;
+        private byte[] hash;
+        private MemoryStream memoryStream;
         private HashAlgorithm digester;
 
         public ObjectHashImplementation()
         {
-            hash = new sbyte[SHA256_BLOCK_SIZE];
+            hash = new byte[SHA256_BLOCK_SIZE];
+            memoryStream = new MemoryStream();
             digester = HashAlgorithm.Create(SHA256);
         }
 
-        // hash entry point
+        /// <summary>
+        /// Hashs any.
+        /// </summary>
+        /// <param name="json">Any JSON data as JToken</param>
         public void HashAny(JToken json)
         {
-            hash = (sbyte[])(Array)digester.ComputeHash(Encoding.UTF8.GetBytes(json.ToString()));
+            hash = digester.ComputeHash(Encoding.UTF8.GetBytes(json.ToString()));
             return;
 
             /*
+            string[] array = { "foo", "bar" };
+            JArray testMe = new JArray(array);
+            HashList(testMe);
+            return;
+
+
             switch (json.Type)
             {
                 case JTokenType.Array:
@@ -77,74 +86,60 @@ namespace ObjectHashServer.Services.Implementations
                 }
                 default:
                 {
-                    throw new Exception("Illegal type in JSON: " + json.Type);
+                    throw new Exception($"The provided JSON {json.Type} has an invalid type");
                 }
-            } 
-            */
+            } */
         }
 
-        private void HashTaggedBytes(char tag, byte[] bytes)
+        private void AddTaggedString(char tag, string value)
         {
-            byte[] merged;
-            if (bytes == null)
-            {
-                merged = new byte[1];
-            }
-            else
-            {
-                merged = new byte[bytes.Length + 1];
-            }
-            hash = (sbyte[])(Array)digester.ComputeHash(merged);
+            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            byte[] merged = new byte[bytes.Length + 1];
+            bytes.CopyTo(merged, 1);
+            merged[0] = (byte)tag;
+            hash = digester.ComputeHash(merged);
         }
 
         private void HashString(string str)
         {
-            HashTaggedBytes('u', Encoding.UTF8.GetBytes(str));
+            AddTaggedString('u', str);
         }
 
-        private void HashInteger(object value)
+        private void HashInteger(int value)
         {
-            string str = value.ToString();
-            HashTaggedBytes('i', Encoding.UTF8.GetBytes(str));
+            AddTaggedString('i', value.ToString());
         }
 
         private void HashDouble(double value)
         {
-            string normalized = NormalizeFloat(value);
-            HashTaggedBytes('f', Encoding.UTF8.GetBytes(normalized));
+            AddTaggedString('f', NormalizeFloat(value));
         }
 
         private void HashNull()
         {
-            HashTaggedBytes('n', Encoding.UTF8.GetBytes(""));
+            AddTaggedString('n', "");
         }
 
         private void HashBoolean(bool b)
         {
-            HashTaggedBytes('b', Encoding.UTF8.GetBytes(b ? "1" : "0"));
+            AddTaggedString('b', b ? "1" : "0");
         }
 
         private void HashList(JArray list)
         {
-            var objectHashList = new List<ObjectHashImplementation>();
+            memoryStream.Flush();
+            memoryStream.WriteByte((byte)'l');
             for (int i = 0; i < list.Count; i++)
             {
-                ObjectHashImplementation innerObject = new ObjectHashImplementation();
-                innerObject.HashAny(list[i]);
-                objectHashList.Add(innerObject);
+                // create the ObjectHash instances, one for each element in the array
+                ObjectHashImplementation objectHash = new ObjectHashImplementation();
+                objectHash.HashString((string)list[i]);
+                memoryStream.Write(objectHash.HashAsByteArray());
             }
-            byte[] merged = new byte[objectHashList.Sum(x => x.hash?.Length ?? 0) + 1];
-            merged[0] = (byte)'l';
-            int dstOffset = 1;
-            foreach (var objectHash in objectHashList)
-            {
-                int sourceCount = objectHash.hash?.Length ?? 0;
-                Buffer.BlockCopy(objectHash.hash, 0, merged, dstOffset, sourceCount);
-                dstOffset += sourceCount;
-            }
-            hash = (sbyte[])(Array)digester.ComputeHash(merged);
+            hash = digester.ComputeHash(memoryStream.ToArray());
         }
 
+        /*           
         private void HashObject(JObject obj)
         {
             List<MemoryStream> buffers = new List<MemoryStream>();
@@ -174,18 +169,18 @@ namespace ObjectHashServer.Services.Implementations
                 dstOffset += byteArray.Length;
             }
             hash = (sbyte[])(Array)digester.ComputeHash(merged);
-        }
+        } 
 
         private string DebugString(IEnumerable<MemoryStream> buffers)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder tmp = new StringBuilder();
             foreach (MemoryStream buff in buffers)
             {
-                sb.Append('\n');
-                sb.Append(ToHex(Array.ConvertAll(buff.ToArray(), b => unchecked((sbyte)b))));
+                tmp.Append('\n');
+                tmp.Append(ToHex(Array.ConvertAll(buff.ToArray(), b => unchecked((sbyte)b))));
             }
-            return sb.ToString();
-        }
+            return tmp.ToString();
+        } */
 
         private static int ParseHex(char digit)
         {
@@ -200,6 +195,7 @@ namespace ObjectHashServer.Services.Implementations
             }
         }
 
+        /*
         public static ObjectHashImplementation FromHex(string hex)
         {
             ObjectHashImplementation h = new ObjectHashImplementation();
@@ -216,7 +212,7 @@ namespace ObjectHashServer.Services.Implementations
                 h.hash[--pos] = (sbyte)(16 * ParseHex(hex[idx - 2]) + ParseHex(hex[idx - 1]));
             }
             return h;
-        }
+        } */
 
         private static JTokenType GetType(JToken json)
         {
@@ -228,7 +224,7 @@ namespace ObjectHashServer.Services.Implementations
             if (this == obj) return true;
             if (obj == null) return false;
             if (GetType() != obj.GetType()) return false;
-            return ToHex().Equals(((ObjectHashImplementation)obj).ToHex());
+            return HashAsString().Equals(((ObjectHashImplementation)obj).HashAsString());
         }
 
         public override int GetHashCode()
@@ -239,37 +235,31 @@ namespace ObjectHashServer.Services.Implementations
 
         public int CompareTo(ObjectHashImplementation other)
         {
-            return string.Compare(ToHex(), other.ToHex(), StringComparison.Ordinal);
+            return string.Compare(HashAsString(), other.HashAsString(), StringComparison.Ordinal);
+        } 
+
+        public override string ToString()
+        {
+            // TODO: implement
+            return memoryStream.ToString();
         }
 
-        public sbyte[] Hash()
+        public byte[] HashAsByteArray()
         {
             return hash;
         }
 
-        public override string ToString()
+        public string HashAsString()
         {
-            return ToHex();
+            return ToHex(HashAsByteArray());
         }
 
-        public string ToHex()
+        private static string ToHex(byte[] ba)
         {
-            return ToHex(hash);
-        }
-
-        private static string ToHex(sbyte[] buffer)
-        {
-            StringBuilder hexString = new StringBuilder();
-            for (int idx = 0; idx < buffer.Length; ++idx)
-            {
-                string hex = (0xff & buffer[idx]).ToString("X");
-                if (hex.Length == 1)
-                {
-                    hexString.Append('0');
-                }
-                hexString.Append(hex);
-            }
-            return hexString.ToString();
+            StringBuilder hex = new StringBuilder(ba.Length * 2);
+            foreach (byte b in ba)
+                hex.AppendFormat("{0:x2}", b);
+            return hex.ToString();
         }
 
         #pragma warning disable RECS0018 // Comparison of floating point numbers with equality operator

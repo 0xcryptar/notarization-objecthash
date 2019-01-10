@@ -32,7 +32,7 @@ namespace ObjectHashServer.Models
                 // this is the real call to the object hash implementation
                 ObjectHashImplementation h = new ObjectHashImplementation();
                 h.HashAny(Data);
-                return h.ToHex(); 
+                return h.HashAsString(); 
             }
         }
 

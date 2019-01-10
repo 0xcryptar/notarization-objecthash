@@ -6,6 +6,15 @@ namespace ObjectHashServer.Services.Implementations
 {
     public class JsonRedactionImplementation
     {
+        /// <summary>
+        /// Redacts the json for a given redaction setting. The redact setting can
+        /// be a Json with objects and arrays but as values it can ONLY contain
+        /// Booleans. For each value 'true' in the redact settings the corresponding
+        /// Json object will be blackout out.
+        /// </summary>
+        /// <returns>A JToken which is redacted on specified places</returns>
+        /// <param name="json">The original Json object</param>
+        /// <param name="redactSettings">The redact setting for redacting the Json object</param>
         public JToken RedactJson(JToken json, JToken redactSettings)
         {
             JToken jsonClone = json.DeepClone();
@@ -22,7 +31,7 @@ namespace ObjectHashServer.Services.Implementations
                     {
                         ObjectHashImplementation h = new ObjectHashImplementation();
                         h.HashAny(json);
-                        return "**REDACTED**" + h.ToHex();
+                        return "**REDACTED**" + h.HashAsString();
                     }
 
                     return json;
@@ -33,12 +42,13 @@ namespace ObjectHashServer.Services.Implementations
                     }
                     catch (InvalidCastException)
                     {
-                        throw new BadRequestException("The provided JSON does not contains an object -> {} where the readact settings require one. Please check the JSON data or the redact settings.");
+                        throw new BadRequestException("The provided JSON does not contain an object -> {} where the readact settings require one. Please check the JSON data or the redact settings.");
                     }
                 case JTokenType.Array:
                     try {
                         return RedactArray((JArray)json, (JArray)redactSettings);
-                    } catch(InvalidCastException)
+                    }
+                    catch(InvalidCastException)
                     {
                         throw new BadRequestException("The provided JSON does not contain an array -> [] where the readact settings require one. Please check the JSON data or the redact settings");
                     }
