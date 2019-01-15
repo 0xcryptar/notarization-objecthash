@@ -38,7 +38,8 @@ namespace ObjectHashServer
             }
             else
             {
-                app.UseHsts();
+                // Hsts will be configure later
+                // app.UseHsts();
             }
 
             app.UseMiddleware(typeof(ExceptionHandlingMiddleware));
