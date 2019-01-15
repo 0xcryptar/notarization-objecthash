@@ -195,6 +195,22 @@ namespace ObjectHashServer.Services.Implementations
             }
         }
 
+        private void Sort(JObject jObject)
+        {
+            var props = jObject.Properties().ToList();
+            foreach (var prop in props)
+            {
+                prop.Remove();
+            }
+
+            foreach (var prop in props.OrderBy(p => p.Name))
+            {
+                jObject.Add(prop);
+                if (prop.Value is JObject)
+                    Sort((JObject)prop.Value);
+            }
+        }
+
         /*
         public static ObjectHashImplementation FromHex(string hex)
         {
