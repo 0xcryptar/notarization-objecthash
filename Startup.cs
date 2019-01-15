@@ -43,7 +43,8 @@ namespace ObjectHashServer
 
             app.UseMiddleware(typeof(ExceptionHandlingMiddleware));
 
-            app.UseHttpsRedirection();
+            // No redirect to https, https will be configure from devops
+            // app.UseHttpsRedirection();
             app.UseMvc();
         }
     }
