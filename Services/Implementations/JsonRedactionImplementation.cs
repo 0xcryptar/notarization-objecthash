@@ -7,14 +7,14 @@ namespace ObjectHashServer.Services.Implementations
     public class JsonRedactionImplementation
     {
         /// <summary>
-        /// Redacts the json for a given redaction setting. The redact setting can
-        /// be a Json with objects and arrays but as values it can ONLY contain
-        /// Booleans. For each value 'true' in the redact settings the corresponding
-        /// Json object will be blackout out.
+        /// Redacts a given JSON object (JToken) for the provided redaction setting. 
+        /// The redact setting can be any valid JSON with objects and arrays but as 
+        /// values it can ONLY contain Booleans. For each value 'true' in the redact 
+        /// settings the counterpart in the JSON will be blacked out.
         /// </summary>
-        /// <returns>A JToken which is redacted on specified places</returns>
-        /// <param name="json">The original Json object</param>
-        /// <param name="redactSettings">The redact setting for redacting the Json object</param>
+        /// <returns>JToken which is redacted on specified postions via the readact settings</returns>
+        /// <param name="json">The original JSON object</param>
+        /// <param name="redactSettings">The redact setting for redacting the JSON object</param>
         public JToken RedactJson(JToken json, JToken redactSettings)
         {
             JToken jsonClone = json.DeepClone();
@@ -30,7 +30,7 @@ namespace ObjectHashServer.Services.Implementations
                     if ((bool)redactSettings)
                     {
                         ObjectHashImplementation h = new ObjectHashImplementation();
-                        h.HashAny(json);
+                        h.HashJToken(json);
                         return "**REDACTED**" + h.HashAsString();
                     }
 

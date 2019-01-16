@@ -6,12 +6,12 @@ namespace ObjectHashServer.Exceptions
 {
     public class BadRequestException : BaseException
     {
+        // TODO: impelement
         public BadRequestException(string message) {
             this.StatusCode = StatusCodes.Status400BadRequest;
             // this.Message = message;
         } //: this(string.Empty, message) { }
 
-        // TODO: check
         /*
         public BadRequestException(string key, string errorMessage)
             : base("BadRequestException")

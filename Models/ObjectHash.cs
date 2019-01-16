@@ -1,11 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Security.Cryptography;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using ObjectHashServer.Exceptions;
+﻿using Newtonsoft.Json.Linq;
 using ObjectHashServer.Models.API.Request;
 using ObjectHashServer.Services.Implementations;
 
@@ -31,7 +24,7 @@ namespace ObjectHashServer.Models
             {
                 // this is the real call to the object hash implementation
                 ObjectHashImplementation h = new ObjectHashImplementation();
-                h.HashAny(Data);
+                h.HashJToken(Data);
                 return h.HashAsString(); 
             }
         }

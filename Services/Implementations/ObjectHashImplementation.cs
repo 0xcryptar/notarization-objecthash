@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -9,110 +8,130 @@ using Newtonsoft.Json.Linq;
 namespace ObjectHashServer.Services.Implementations
 {
     /// <summary>
-    /// This is the C# implementation of the original ObjectHash libaray
-    /// from Ben Laurie. The source code of may other implementations can 
-    /// be found here: https://github.com/benlaurie/objecthash
+    /// This is the C# implementation of the ObjectHash libaray from Ben Laurie. 
+    /// The source code of may other implementations can be found here: 
+    /// https://github.com/benlaurie/objecthash
     /// </summary>
     public class ObjectHashImplementation : IComparable<ObjectHashImplementation>
     {
         // constants
-        private static int SHA256_BLOCK_SIZE = 32;
-        private static string SHA256 = "SHA-256";
+        private static readonly string HASH_ALGORITHM = "SHA-256";
+        private static readonly int HASH_ALGORITHM_BLOCK_SIZE = 32;
+        private static readonly bool SORT_ARRAY = false;
+        private static readonly StringComparison STRING_COMPARE_METHOD = StringComparison.Ordinal;
 
         // private variables
         private byte[] hash;
-        private MemoryStream memoryStream;
         private HashAlgorithm digester;
+        private MemoryStream memoryStream;
 
         public ObjectHashImplementation()
         {
-            hash = new byte[SHA256_BLOCK_SIZE];
+            hash = new byte[HASH_ALGORITHM_BLOCK_SIZE];
+            digester = HashAlgorithm.Create(HASH_ALGORITHM);
             memoryStream = new MemoryStream();
-            digester = HashAlgorithm.Create(SHA256);
         }
 
         /// <summary>
-        /// Hashs any.
+        /// Add any data to the hash calcualtion of the ObjectHashImplementation object.
         /// </summary>
-        /// <param name="json">Any JSON data as JToken</param>
-        public void HashAny(JToken json)
+        /// <param name="json">Any valid (RFC 7159 and ECMA-404) JSON data as JToken</param>
+        public void HashJToken(JToken json)
         {
-            hash = digester.ComputeHash(Encoding.UTF8.GetBytes(json.ToString()));
-            return;
-
-            /*
-            string[] array = { "foo", "bar" };
-            JArray testMe = new JArray(array);
-            HashList(testMe);
-            return;
-
+            // TODO check:
+            // JTokenType.Guid
+            // JTokenType.TimeSpan
+            // JTokenType.Uri
+            // JTokenType.None
 
             switch (json.Type)
             {
                 case JTokenType.Array:
-                {
-                    HashList((JArray)json);
-                    break;
-                }
+                    {
+                        HashArray((JArray)json);
+                        break;
+                    }
                 case JTokenType.Object:
-                {
-                    HashObject((JObject)json);
-                    break;
-                }
+                    {
+                        HashObject((JObject)json);
+                        break;
+                    }
                 case JTokenType.Integer:
-                {
-                    HashInteger((int)json);
-                    break;
-                }
+                    {
+                        HashLong((long)json);
+                        break;
+                    }
                 case JTokenType.String:
-                {
-                    HashString((string)json);
-                    break;
-                }
+                    {
+                        HashString((string)json);
+                        break;
+                    }
                 case JTokenType.Null:
-                {
-                    HashNull();
-                    break;
-                }
+                    {
+                        HashNull();
+                        break;
+                    }
                 case JTokenType.Boolean:
-                {
-                    HashBoolean((bool)json);
-                    break;
-                }
+                    {
+                        HashBoolean((bool)json);
+                        break;
+                    }
                 case JTokenType.Float:
-                {
-                    HashDouble((double)json);
-                    break;
-                }
+                    {
+                        // TODO: check if not to use float instead of double
+                        HashDouble((double)json);
+                        break;
+                    }
+                case JTokenType.Bytes:
+                    {
+                        HashBytes((byte[])json);
+                        break;
+                    }
+                case JTokenType.Date:
+                    {
+                        HashDateTime((DateTime)json);
+                        break;
+                    }
                 default:
-                {
-                    throw new Exception($"The provided JSON {json.Type} has an invalid type");
-                }
-            } */
+                    {
+                        throw new Exception($"The provided JSON has an invalid type of {json.Type}. Please remove it.");
+                    }
+            }
         }
 
-        private void AddTaggedString(char tag, string value)
+        private void AddTaggedByteArray(char tag, byte[] byteArray)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(value);
-            byte[] merged = new byte[bytes.Length + 1];
-            bytes.CopyTo(merged, 1);
+            byte[] merged = new byte[byteArray.Length + 1];
+            byteArray.CopyTo(merged, 1);
             merged[0] = (byte)tag;
             hash = digester.ComputeHash(merged);
         }
 
-        private void HashString(string str)
+        private void AddTaggedString(char tag, string value)
         {
-            AddTaggedString('u', str);
+            AddTaggedByteArray(tag, Encoding.UTF8.GetBytes(value));
         }
 
-        private void HashInteger(int value)
+        private void HashString(string str)
+        {
+            if(str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
+            {
+                hash = FromHex(str.Substring(12, str.Length - 12));
+            }
+            else
+            {
+                AddTaggedString('u', str);
+            }
+        }
+
+        private void HashLong(long value)
         {
             AddTaggedString('i', value.ToString());
         }
 
         private void HashDouble(double value)
         {
-            AddTaggedString('f', NormalizeFloat(value));
+            AddTaggedString('f', NormalizeDouble(value));
         }
 
         private void HashNull()
@@ -125,122 +144,82 @@ namespace ObjectHashServer.Services.Implementations
             AddTaggedString('b', b ? "1" : "0");
         }
 
-        private void HashList(JArray list)
+        private void HashDateTime(DateTime t)
         {
-            memoryStream.Flush();
-            memoryStream.WriteByte((byte)'l');
-            for (int i = 0; i < list.Count; i++)
+            // normalize DateTime to UTC and ISO 8601
+            AddTaggedString('t', t.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+        }
+
+        private void HashBytes(byte[] bs)
+        {
+            // TODO: check if 'l' is a good idea 
+            AddTaggedByteArray('l', bs);
+        }
+
+        private void HashArray(JArray array)
+        {
+            byte[][] hashList = new byte[array.Count][];
+            for (int i = 0; i < array.Count; i++)
             {
-                // create the ObjectHash instances, one for each element in the array
-                ObjectHashImplementation objectHash = new ObjectHashImplementation();
-                objectHash.HashString((string)list[i]);
-                memoryStream.Write(objectHash.HashAsByteArray());
+                ObjectHashImplementation aElementHash = new ObjectHashImplementation();
+                aElementHash.HashJToken(array[i]);
+                hashList[i] = aElementHash.HashAsByteArray();
+            }
+
+            // sorting arrays can be useful, but the default should be not to sort arrays
+            HashListOfHashes(hashList, SORT_ARRAY);
+        }
+
+        private void HashObject(JObject obj)
+        {
+            byte[][] hashList = new byte[obj.Count][];
+            int i = 0;
+            foreach (var o in obj)
+            {
+                ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
+                // TODO: error mgnt
+                jKeyHash.HashString(o.Key);
+
+                ObjectHashImplementation jValHash = new ObjectHashImplementation();
+                // TODO: error mgnt -> try get -> obj.TryGetValue(key, out var value);
+                jValHash.HashJToken(o.Value);
+
+                // merge both hashes (of key and object)
+                hashList[i] = jKeyHash.HashAsByteArray().Concat(jValHash.HashAsByteArray()).ToArray();
+                i++;
+            }
+
+            // objects should always be sorted
+            HashListOfHashes(hashList, true, 'd');
+        }
+
+        private void HashListOfHashes(byte[][] hashList, bool sortArray = false, char type = 'l')
+        {
+            // sorting, if wanted
+            if (sortArray)
+            {
+                Array.Sort(hashList, (x, y) => string.Compare(ToHex(x), ToHex(y), STRING_COMPARE_METHOD));
+            }
+
+            // hashing
+            memoryStream.Flush();
+            memoryStream.WriteByte((byte)type);
+            for (int i = 0; i < hashList.GetLength(0); i++)
+            {
+                memoryStream.Write(hashList[i]);
             }
             hash = digester.ComputeHash(memoryStream.ToArray());
         }
 
-        /*           
-        private void HashObject(JObject obj)
+        private string DebugString()
         {
-            List<MemoryStream> buffers = new List<MemoryStream>();
-            foreach (var o in obj)
-            {
-                MemoryStream buff = new MemoryStream(2 * SHA256_BLOCK_SIZE);
-                BinaryWriter writer = new BinaryWriter(buff);
-                string key = o.Key;
-                // would be nice to chain all these calls builder-stylee.
-                ObjectHashImplementation hKey = new ObjectHashImplementation();
-                hKey.HashString(key);
-                ObjectHashImplementation hVal = new ObjectHashImplementation();
-                obj.TryGetValue(key, out var value);
-                hVal.HashAny(value);
-                writer.Write((byte[])(object)hKey.Hash());
-                writer.Write((byte[])(object)hVal.Hash());
-                buffers.Add(buff);
-            }
-            buffers = buffers.OrderBy(x => ToHex(Array.ConvertAll(x.ToArray(), b => unchecked((sbyte)b)))).ToList();
-            var byteArrays = buffers.Select(x => x.ToArray());
-            byte[] merged = new byte[byteArrays.Sum(x => x.Length) + 1];
-            merged[0] = (byte)'l';
-            int dstOffset = 1;
-            foreach (var byteArray in byteArrays)
-            {
-                Buffer.BlockCopy(byteArray, 0, merged, dstOffset, byteArray.Length);
-                dstOffset += byteArray.Length;
-            }
-            hash = (sbyte[])(Array)digester.ComputeHash(merged);
-        } 
-
-        private string DebugString(IEnumerable<MemoryStream> buffers)
-        {
-            StringBuilder tmp = new StringBuilder();
-            foreach (MemoryStream buff in buffers)
-            {
-                tmp.Append('\n');
-                tmp.Append(ToHex(Array.ConvertAll(buff.ToArray(), b => unchecked((sbyte)b))));
-            }
-            return tmp.ToString();
-        } */
-
-        private static int ParseHex(char digit)
-        {
-            // TODO: Xunit.Assert.True((digit >= '0' && digit <= '9') || (digit >= 'a' && digit <= 'f'));
-            if (digit >= '0' && digit <= '9')
-            {
-                return digit - '0';
-            }
-            else
-            {
-                return 10 + digit - 'a';
-            }
+            return ToHex(memoryStream.ToArray());
         }
 
-        private void Sort(JObject jObject)
+        public override string ToString()
         {
-            var props = jObject.Properties().ToList();
-            foreach (var prop in props)
-            {
-                prop.Remove();
-            }
-
-            foreach (var prop in props.OrderBy(p => p.Name))
-            {
-                jObject.Add(prop);
-                if (prop.Value is JObject)
-                    Sort((JObject)prop.Value);
-            }
-        }
-
-        /*
-        public static ObjectHashImplementation FromHex(string hex)
-        {
-            ObjectHashImplementation h = new ObjectHashImplementation();
-            hex = hex.ToLower();
-            if (hex.Length % 2 == 1)
-            {
-                hex = '0' + hex;
-            }
-
-            // TODO: maybe just use Int.valueOf(s).intValue()
-            int pos = SHA256_BLOCK_SIZE;
-            for (int idx = hex.Length; idx > 0; idx -= 2)
-            {
-                h.hash[--pos] = (sbyte)(16 * ParseHex(hex[idx - 2]) + ParseHex(hex[idx - 1]));
-            }
-            return h;
-        } */
-
-        private static JTokenType GetType(JToken json)
-        {
-            return json.Type;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (this == obj) return true;
-            if (obj == null) return false;
-            if (GetType() != obj.GetType()) return false;
-            return HashAsString().Equals(((ObjectHashImplementation)obj).HashAsString());
+            // TODO: check if debug string is useful here
+            return DebugString();
         }
 
         public override int GetHashCode()
@@ -249,15 +228,18 @@ namespace ObjectHashServer.Services.Implementations
             return 1;
         }
 
+        public override bool Equals(object obj)
+        {
+            // TODO: check
+            // if (obj.GetType() != obj.GetType()) return false;
+            if (this == obj) return true;
+            if (obj == null) return false;
+            return HashAsString().Equals(((ObjectHashImplementation)obj).HashAsString());
+        }
+
         public int CompareTo(ObjectHashImplementation other)
         {
-            return string.Compare(HashAsString(), other.HashAsString(), StringComparison.Ordinal);
-        } 
-
-        public override string ToString()
-        {
-            // TODO: implement
-            return memoryStream.ToString();
+            return string.Compare(HashAsString(), other.HashAsString(), STRING_COMPARE_METHOD);
         }
 
         public byte[] HashAsByteArray()
@@ -270,57 +252,75 @@ namespace ObjectHashServer.Services.Implementations
             return ToHex(HashAsByteArray());
         }
 
+        //  HELPERS  //
+
         private static string ToHex(byte[] ba)
         {
             StringBuilder hex = new StringBuilder(ba.Length * 2);
             foreach (byte b in ba)
+            {
                 hex.AppendFormat("{0:x2}", b);
+            }
             return hex.ToString();
         }
 
-        #pragma warning disable RECS0018 // Comparison of floating point numbers with equality operator
-        static string NormalizeFloat(double f)
+        private static byte[] FromHex(string hex)
         {
-            // Early out for zero. No epsiolon diff check wanted.
-            if (f == 0.0)
+            // TODO: exception if non valid hex charaters
+            return Enumerable.Range(0, hex.Length)
+                     .Where(x => x % 2 == 0)
+                     .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                     .ToArray();
+        }
+
+        /// <summary>
+        /// Normalizes a float/double. This function was taken from benlaurie/objecthash
+        /// </summary>
+        /// <returns>String of the normalized double</returns>
+        /// <param name="d">Input value</param>
+        #pragma warning disable RECS0018 // Comparison of floating point numbers with equality operator
+        private static string NormalizeDouble(double d)
+        {
+            // Early out for zero. No epsilon diff check wanted.
+            if (d == 0.0)
             {
                 return "+0:";
             }
             StringBuilder sb = new StringBuilder();
             // Sign
-            sb.Append(f < 0.0 ? '-' : '+');
-            if (f < 0.0) f = -f;
+            sb.Append(d < 0.0 ? '-' : '+');
+            if (d < 0.0) d = -d;
             // Exponent
             int e = 0;
-            while (f > 1)
+            while (d > 1)
             {
-                f /= 2;
+                d /= 2;
                 e += 1;
             }
-            while (f < 0.5)
+            while (d < 0.5)
             {
-                f *= 2;
+                d *= 2;
                 e -= 1;
             }
             sb.Append(e);
             sb.Append(':');
             // Mantissa
-            if (f > 1 || f <= 0.5)
+            if (d > 1 || d <= 0.5)
             {
                 throw new Exception("wrong range for mantissa");
             }
-            while (f != 0)
+            while (d != 0)
             {
-                if (f >= 1)
+                if (d >= 1)
                 {
                     sb.Append('1');
-                    f -= 1;
+                    d -= 1;
                 }
                 else
                 {
                     sb.Append('0');
                 }
-                if (f >= 1)
+                if (d >= 1)
                 {
                     throw new Exception("oops, f is too big");
                 }
@@ -328,7 +328,7 @@ namespace ObjectHashServer.Services.Implementations
                 {
                     throw new Exception("things have got out of hand");
                 }
-                f *= 2;
+                d *= 2;
             }
             return sb.ToString();
         }
