@@ -151,7 +151,7 @@ namespace ObjectHashServer.Services.Implementations
 
         private void HashBytes(byte[] bs)
         {
-            // TODO: check if 'l' is a good idea 
+            // TODO: think about if 'l' is a good tag
             AddTaggedByteArray('l', bs);
         }
 
@@ -215,6 +215,7 @@ namespace ObjectHashServer.Services.Implementations
 
         public override string ToString()
         {
+            // return the hex representation of the current memory stream
             return DebugString();
         }
 
