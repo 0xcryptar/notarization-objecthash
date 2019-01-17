@@ -1,12 +1,13 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace ObjectHashServer.Models.API.Response
 {
-    public class ObjectHashResponseModel
+    public class ObjectHashResponseModel : ResponseModel
     {
-        public ObjectHashResponseModel(ObjectHash objectHash)
+        public ObjectHashResponseModel() : base("objectHash")
+        { }
+
+        public ObjectHashResponseModel(ObjectHash objectHash) : this()
         {
             // only return the redacted data
             Data = objectHash.RedactedData;

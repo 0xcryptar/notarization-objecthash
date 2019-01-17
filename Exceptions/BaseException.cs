@@ -6,6 +6,5 @@ namespace ObjectHashServer.Exceptions
 {
     public abstract class BaseException : Exception
     {
-        public int StatusCode { get; set; }
     }
 }

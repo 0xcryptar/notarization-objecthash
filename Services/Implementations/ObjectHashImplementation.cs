@@ -167,7 +167,7 @@ namespace ObjectHashServer.Services.Implementations
             }
 
             // sorting arrays can be useful, but the default should be not to sort arrays
-            HashListOfHashes(hashList, SORT_ARRAY);
+            HashListOfHashes(hashList, 'l', SORT_ARRAY);
         }
 
         private void HashObject(JObject obj)
@@ -190,10 +190,10 @@ namespace ObjectHashServer.Services.Implementations
             }
 
             // objects should always be sorted
-            HashListOfHashes(hashList, true, 'd');
+            HashListOfHashes(hashList, 'd', true);
         }
 
-        private void HashListOfHashes(byte[][] hashList, bool sortArray = false, char type = 'l')
+        private void HashListOfHashes(byte[][] hashList, char type, bool sortArray = false)
         {
             // sorting, if wanted
             if (sortArray)
@@ -251,8 +251,6 @@ namespace ObjectHashServer.Services.Implementations
         {
             return ToHex(HashAsByteArray());
         }
-
-        //  HELPERS  //
 
         private static string ToHex(byte[] ba)
         {
