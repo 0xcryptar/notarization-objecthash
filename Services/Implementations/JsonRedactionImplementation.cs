@@ -42,7 +42,7 @@ namespace ObjectHashServer.Services.Implementations
                     }
                     catch (InvalidCastException)
                     {
-                        throw new BadRequestException("The provided JSON does not contain an object -> {} where the readact settings require one. Please check the JSON data or the redact settings.");
+                        throw new BadRequestException("The provided JSON does not contain an object -> {} where the redact settings require one. Please check the JSON data or the redact settings.");
                     }
                 case JTokenType.Array:
                     try {
@@ -50,7 +50,7 @@ namespace ObjectHashServer.Services.Implementations
                     }
                     catch(InvalidCastException)
                     {
-                        throw new BadRequestException("The provided JSON does not contain an array -> [] where the readact settings require one. Please check the JSON data or the redact settings");
+                        throw new BadRequestException("The provided JSON does not contain an array -> [] where the redact settings require one. Please check the JSON data or the redact settings");
                     }
                 default:
                     throw new BadRequestException("The redact setting JSON is invalid. It can only contain a nested JSON, arrays and the data type Boolean.");
@@ -64,7 +64,7 @@ namespace ObjectHashServer.Services.Implementations
                 // check if Json object has same keys as the redact settings
                 if (!json.ContainsKey(redactSetting.Key))
                 {
-                    throw new BadRequestException("The provided JSON has an object which is different from the object defined in the readact settings. Please check the JSON data or the redact settings.");
+                    throw new BadRequestException("The provided JSON has an object which is different from the object defined in the redact settings. Please check the JSON data or the redact settings.");
                 }
 
                 json[redactSetting.Key] = RecursivlyRedactJson(json[redactSetting.Key], redactSettings[redactSetting.Key]);

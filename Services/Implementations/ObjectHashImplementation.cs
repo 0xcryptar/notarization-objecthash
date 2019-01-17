@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using ObjectHashServer.Exceptions;
 
 namespace ObjectHashServer.Services.Implementations
 {
@@ -12,7 +13,7 @@ namespace ObjectHashServer.Services.Implementations
     /// The source code of may other implementations can be found here: 
     /// https://github.com/benlaurie/objecthash
     /// </summary>
-    public class ObjectHashImplementation : IComparable<ObjectHashImplementation>
+    public class ObjectHashImplementation
     {
         // constants
         private static readonly string HASH_ALGORITHM = "SHA-256";
@@ -38,12 +39,6 @@ namespace ObjectHashServer.Services.Implementations
         /// <param name="json">Any valid (RFC 7159 and ECMA-404) JSON data as JToken</param>
         public void HashJToken(JToken json)
         {
-            // TODO check:
-            // JTokenType.Guid
-            // JTokenType.TimeSpan
-            // JTokenType.Uri
-            // JTokenType.None
-
             switch (json.Type)
             {
                 case JTokenType.Array:
@@ -62,11 +57,15 @@ namespace ObjectHashServer.Services.Implementations
                         break;
                     }
                 case JTokenType.String:
+                case JTokenType.TimeSpan:
+                case JTokenType.Guid:
+                case JTokenType.Uri:
                     {
                         HashString((string)json);
                         break;
                     }
-                case JTokenType.Null:
+                case JTokenType.Null: 
+                case JTokenType.None:
                     {
                         HashNull();
                         break;
@@ -94,7 +93,7 @@ namespace ObjectHashServer.Services.Implementations
                     }
                 default:
                     {
-                        throw new Exception($"The provided JSON has an invalid type of {json.Type}. Please remove it.");
+                        throw new BadRequestException($"The provided JSON has an invalid type of {json.Type}. Please remove it.");
                     }
             }
         }
@@ -177,11 +176,9 @@ namespace ObjectHashServer.Services.Implementations
             foreach (var o in obj)
             {
                 ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
-                // TODO: error mgnt
                 jKeyHash.HashString(o.Key);
 
                 ObjectHashImplementation jValHash = new ObjectHashImplementation();
-                // TODO: error mgnt -> try get -> obj.TryGetValue(key, out var value);
                 jValHash.HashJToken(o.Value);
 
                 // merge both hashes (of key and object)
@@ -218,23 +215,7 @@ namespace ObjectHashServer.Services.Implementations
 
         public override string ToString()
         {
-            // TODO: check if debug string is useful here
             return DebugString();
-        }
-
-        public override int GetHashCode()
-        {
-            // TODO: implement
-            return 1;
-        }
-
-        public override bool Equals(object obj)
-        {
-            // TODO: check
-            // if (obj.GetType() != obj.GetType()) return false;
-            if (this == obj) return true;
-            if (obj == null) return false;
-            return HashAsString().Equals(((ObjectHashImplementation)obj).HashAsString());
         }
 
         public int CompareTo(ObjectHashImplementation other)
@@ -264,11 +245,15 @@ namespace ObjectHashServer.Services.Implementations
 
         private static byte[] FromHex(string hex)
         {
-            // TODO: exception if non valid hex charaters
-            return Enumerable.Range(0, hex.Length)
+            try { 
+                return Enumerable.Range(0, hex.Length)
                      .Where(x => x % 2 == 0)
                      .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                      .ToArray();
+            } catch(FormatException)
+            {
+                throw new BadRequestException("The provided redact hash does not contain a valid SHA256 (64 char, hex only)");
+            }
         }
 
         /// <summary>
