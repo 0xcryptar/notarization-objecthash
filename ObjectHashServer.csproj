@@ -23,11 +23,4 @@
   <ItemGroup>
     <None Remove=".gitignore" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Middleware\ExceptionHandlingMiddleware.cs" />
-    <Compile Remove="Models\API\Response\BaseExceptionModel.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Remove="appsettings.Development.json" />
-  </ItemGroup>
 </Project>
