@@ -18,13 +18,16 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
+    <PackageReference Include="Sentry.AspNetCore" Version="1.1.2" />
   </ItemGroup>
   <ItemGroup>
     <None Remove=".gitignore" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Exceptions\BaseException.cs" />
     <Compile Remove="Middleware\ExceptionHandlingMiddleware.cs" />
     <Compile Remove="Models\API\Response\BaseExceptionModel.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="appsettings.Development.json" />
   </ItemGroup>
 </Project>

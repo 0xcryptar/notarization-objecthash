@@ -3,33 +3,36 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ObjectHashServer.Exceptions;
 using ObjectHashServer.Models.API.Response;
 
 namespace ObjectHashServer.Utils
 {
     /// <summary>
-    /// Exception handling middleware. This is based on the great Bitwarden repo
-    /// 
+    /// Exception handling middleware. This is based on the great Bitwarden repo:
+    /// https://github.com/bitwarden/server/blob/86aa342bad71c90a076aae6ca7f254eb5d6b8c7d/src/Api/Utilities/ExceptionHandlerFilterAttribute.cs
     /// </summary>
     public class ExceptionHandlerFilterAttribute : ExceptionFilterAttribute
     {
         public override void OnException(ExceptionContext context)
         {
-            var errorModel = new ErrorResponseModel("An error has occurred.");
+            ErrorResponseModel errorModel = new ErrorResponseModel("An error has occurred.");
+            bool logException = false;
+            Exception exception = context.Exception;
 
-            var exception = context.Exception;
             if (exception == null)
             {
-                // Should never happen.
+                // Should never happen
                 return;
             }
 
-            var badRequestException = exception as BadRequestException;
-            if (badRequestException != null)
+            if (exception is BadRequestException)
             {
+                logException = true;
+
                 context.HttpContext.Response.StatusCode = 400;
-                errorModel.Message = badRequestException.Message;
+                errorModel.Message = exception.Message;
             }
             else if (exception is NotSupportedException && !string.IsNullOrWhiteSpace(exception.Message))
             {
@@ -52,10 +55,17 @@ namespace ObjectHashServer.Utils
             }
             else
             {
-                // add sentry error logging
+                // log all non standard exceptions
+                logException = true;
 
                 errorModel.Message = "An unhandled server error has occurred.";
                 context.HttpContext.Response.StatusCode = 500;
+            }
+
+            if (logException)
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<ExceptionHandlerFilterAttribute>>();
+                logger.LogError(0, exception, exception.Message);
             }
 
             var env = context.HttpContext.RequestServices.GetRequiredService<IHostingEnvironment>();

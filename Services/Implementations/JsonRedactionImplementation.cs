@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
 
@@ -40,17 +42,17 @@ namespace ObjectHashServer.Services.Implementations
                     {
                         return RedactObject((JObject)json, (JObject)redactSettings);
                     }
-                    catch (InvalidCastException)
+                    catch (InvalidCastException e)
                     {
-                        throw new BadRequestException("The provided JSON does not contain an object -> {} where the redact settings require one. Please check the JSON data or the redact settings.");
+                        throw new BadRequestException("The provided JSON does not contain an object -> {} where the redact settings require one. Please check the JSON data or the redact settings.", e);
                     }
                 case JTokenType.Array:
                     try {
                         return RedactArray((JArray)json, (JArray)redactSettings);
                     }
-                    catch(InvalidCastException)
+                    catch(InvalidCastException e)
                     {
-                        throw new BadRequestException("The provided JSON does not contain an array -> [] where the redact settings require one. Please check the JSON data or the redact settings");
+                        throw new BadRequestException("The provided JSON does not contain an array -> [] where the redact settings require one. Please check the JSON data or the redact settings", e);
                     }
                 default:
                     throw new BadRequestException("The redact setting JSON is invalid. It can only contain a nested JSON, arrays and the data type Boolean.");
@@ -64,7 +66,12 @@ namespace ObjectHashServer.Services.Implementations
                 // check if Json object has same keys as the redact settings
                 if (!json.ContainsKey(redactSetting.Key))
                 {
-                    throw new BadRequestException("The provided JSON has an object which is different from the object defined in the redact settings. Please check the JSON data or the redact settings.");
+                    IDictionary additionalExceptionData = new Dictionary<string, object>
+                    {
+                        { "missingKey", redactSetting.Key }
+                    };
+
+                    throw new BadRequestException("The provided JSON has an object which is different from the object defined in the redact settings. Please check the JSON data or the redact settings.", additionalExceptionData);
                 }
 
                 json[redactSetting.Key] = RecursivlyRedactJson(json[redactSetting.Key], redactSettings[redactSetting.Key]);

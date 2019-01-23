@@ -181,7 +181,7 @@ namespace ObjectHashServer.Services.Implementations
                 ObjectHashImplementation jValHash = new ObjectHashImplementation();
                 jValHash.HashJToken(o.Value);
 
-                // merge both hashes (of key and object)
+                // merge both hashes (of key and value)
                 hashList[i] = jKeyHash.HashAsByteArray().Concat(jValHash.HashAsByteArray()).ToArray();
                 i++;
             }
@@ -251,9 +251,9 @@ namespace ObjectHashServer.Services.Implementations
                      .Where(x => x % 2 == 0)
                      .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                      .ToArray();
-            } catch(FormatException)
+            } catch(FormatException e)
             {
-                throw new BadRequestException("The provided redact hash does not contain a valid SHA256 (64 char, hex only)");
+                throw new BadRequestException("The provided redact hash does not contain a valid SHA256 (64 char, hex only)", e);
             }
         }
 
