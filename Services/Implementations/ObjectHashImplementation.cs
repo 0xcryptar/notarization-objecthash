@@ -115,8 +115,6 @@ namespace ObjectHashServer.Services.Implementations
         private void HashString(string nnStr)
         {
             String str = nnStr.Normalize(STRING_NORMALIZATION);
-            Console.WriteLine(nnStr);
-            Console.WriteLine(str);
             if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
             {
                 hash = FromHex(str.Substring(12, str.Length - 12));
