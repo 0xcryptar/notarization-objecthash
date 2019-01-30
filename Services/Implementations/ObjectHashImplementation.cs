@@ -112,16 +112,15 @@ namespace ObjectHashServer.Services.Implementations
             AddTaggedByteArray(tag, Encoding.UTF8.GetBytes(value));
         }
 
-        private void HashString(string nnStr)
+        private void HashString(string str)
         {
-            String str = nnStr.Normalize(STRING_NORMALIZATION);
             if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
             {
                 hash = FromHex(str.Substring(12, str.Length - 12));
             }
             else
             {
-                AddTaggedString('u', str);
+                AddTaggedString('u', str.Normalize(STRING_NORMALIZATION));
             }
         }
 

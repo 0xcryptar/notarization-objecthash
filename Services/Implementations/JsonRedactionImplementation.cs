@@ -40,7 +40,13 @@ namespace ObjectHashServer.Services.Implementations
                 case JTokenType.Object:
                     try
                     {
-                        return RedactObject((JObject)json, (JObject)redactSettings);
+                        switch(json.Type)
+                        {
+                            case JTokenType.Array:
+                                return RedactArrayWithCommand((JArray)json, (JObject)redactSettings);
+                            default:
+                                return RedactObject((JObject)json, (JObject)redactSettings);
+                        }
                     }
                     catch (InvalidCastException e)
                     {
@@ -92,6 +98,49 @@ namespace ObjectHashServer.Services.Implementations
             for (int i = 0; i < redactSettings.Count; i++)
             {
                 json[i] = RecursivlyRedactJson(json[i], redactSettings[i]);
+            }
+
+            return json;
+        }
+
+        // TODO: improve. The DSL for redacting an array with a command like forEach
+        // is still an early feature and needs more development
+        private JToken RedactArrayWithCommand(JArray json, JObject command)
+        {
+            // check that command is object with single command only
+            if(command.Count != 1)
+            {
+                IDictionary additionalExceptionData = new Dictionary<string, object>
+                {
+                    { "commandObject", command }
+                };
+
+                throw new BadRequestException("A command object can only contain one command element. Please read the manual or contact an admin", additionalExceptionData);
+            }
+
+            if(command.ContainsKey("REDACT:forEach"))
+            {
+                return RedactArrayForEach(json, command["REDACT:forEach"]);
+            }
+            // TODO: add new commands
+            // else if() { }
+            else
+            {
+                IDictionary additionalExceptionData = new Dictionary<string, object>
+                {
+                    { "commandObject", command }
+                };
+
+                throw new BadRequestException("You tried to use a redact command. The command you used is not valid. Currently available: 'REDACT:forEach'", additionalExceptionData);
+            }
+        }
+
+        private JToken RedactArrayForEach(JArray json, JToken redactSettings)
+        {
+            // TODO: validate redactSettings
+            for (int i = 0; i < json.Count; i++)
+            {
+                json[i] = RecursivlyRedactJson(json[i], redactSettings);
             }
 
             return json;
