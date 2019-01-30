@@ -20,6 +20,7 @@ namespace ObjectHashServer.Services.Implementations
         private static readonly int HASH_ALGORITHM_BLOCK_SIZE = 32;
         private static readonly bool SORT_ARRAY = false;
         private static readonly StringComparison STRING_COMPARE_METHOD = StringComparison.Ordinal;
+        private static readonly NormalizationForm STRING_NORMALIZATION = NormalizationForm.FormC;
 
         // private variables
         private byte[] hash;
@@ -111,9 +112,12 @@ namespace ObjectHashServer.Services.Implementations
             AddTaggedByteArray(tag, Encoding.UTF8.GetBytes(value));
         }
 
-        private void HashString(string str)
+        private void HashString(string nnStr)
         {
-            if(str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
+            String str = nnStr.Normalize(STRING_NORMALIZATION);
+            Console.WriteLine(nnStr);
+            Console.WriteLine(str);
+            if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
             {
                 hash = FromHex(str.Substring(12, str.Length - 12));
             }
