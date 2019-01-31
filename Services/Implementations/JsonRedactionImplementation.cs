@@ -137,7 +137,6 @@ namespace ObjectHashServer.Services.Implementations
 
         private JToken RedactArrayForEach(JArray json, JToken redactSettings)
         {
-            // TODO: validate redactSettings
             for (int i = 0; i < json.Count; i++)
             {
                 json[i] = RecursivlyRedactJson(json[i], redactSettings);
