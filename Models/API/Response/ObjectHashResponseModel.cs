@@ -16,13 +16,9 @@ namespace ObjectHashServer.Models.API.Response
             Salt = objectHash.Salt;
         }
 
-        // required
         public JToken Data { get; set; }
-        // required
         public string Hash { get; set; }
-        // optional
         public JToken RedactSettings { get; set; }
-        // optional
         public string Salt { get; set; }
     }
 }

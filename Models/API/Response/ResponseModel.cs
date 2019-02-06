@@ -1,10 +1,11 @@
 ﻿using System;
+using Newtonsoft.Json;
 
 namespace ObjectHashServer.Models.API.Response
 {
     public abstract class ResponseModel
     {
-        public ResponseModel(string obj)
+        protected ResponseModel(string obj)
         {
             if (string.IsNullOrWhiteSpace(obj))
             {
@@ -14,6 +15,7 @@ namespace ObjectHashServer.Models.API.Response
             Object = obj;
         }
 
+        [JsonIgnore]
         public string Object { get; private set; }
     }
 }

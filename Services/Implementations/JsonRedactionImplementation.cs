@@ -8,6 +8,13 @@ namespace ObjectHashServer.Services.Implementations
 {
     public class JsonRedactionImplementation
     {
+        private readonly string salt;
+
+        public JsonRedactionImplementation(string salt)
+        {
+            this.salt = salt;
+        }
+
         /// <summary>
         /// Redacts a given JSON object (JToken) for the provided redaction setting. 
         /// The redact setting can be any valid JSON with objects and arrays but as 
@@ -29,14 +36,18 @@ namespace ObjectHashServer.Services.Implementations
             switch (redactSettings.Type)
             {
                 case JTokenType.Boolean:
+                    ObjectHashImplementation objectHash;
+
                     if ((bool)redactSettings)
                     {
-                        ObjectHashImplementation h = new ObjectHashImplementation();
-                        h.HashJToken(json);
-                        return "**REDACTED**" + h.HashAsString();
+                        objectHash = new ObjectHashImplementation(salt);
+                        objectHash.HashJToken(json);
+                        return "**REDACTED**" + objectHash.HashAsString();
+                    } 
+                    else
+                    {
+                        return json;
                     }
-
-                    return json;
                 case JTokenType.Object:
                     try
                     {

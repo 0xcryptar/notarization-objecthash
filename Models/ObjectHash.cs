@@ -23,7 +23,7 @@ namespace ObjectHashServer.Models
             get
             {
                 // this is the real call to the object hash implementation
-                ObjectHashImplementation h = new ObjectHashImplementation();
+                ObjectHashImplementation h = new ObjectHashImplementation(Salt);
                 h.HashJToken(Data);
                 return h.HashAsString(); 
             }
@@ -39,7 +39,7 @@ namespace ObjectHashServer.Models
                     return Data;
                 }
 
-                JsonRedactionImplementation service = new JsonRedactionImplementation();
+                JsonRedactionImplementation service = new JsonRedactionImplementation(Salt);
                 return service.RedactJson(Data, RedactSettings);
             }
         }

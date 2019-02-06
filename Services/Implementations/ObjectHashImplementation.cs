@@ -24,14 +24,16 @@ namespace ObjectHashServer.Services.Implementations
 
         // private variables
         private byte[] hash;
+        private readonly string salt;
         private HashAlgorithm digester;
         private MemoryStream memoryStream;
 
-        public ObjectHashImplementation()
+        public ObjectHashImplementation(string salt = null)
         {
-            hash = new byte[HASH_ALGORITHM_BLOCK_SIZE];
-            digester = HashAlgorithm.Create(HASH_ALGORITHM);
-            memoryStream = new MemoryStream();
+            this.salt = salt;      
+            this.hash = new byte[HASH_ALGORITHM_BLOCK_SIZE];
+            this.digester = HashAlgorithm.Create(HASH_ALGORITHM);
+            this.memoryStream = new MemoryStream();
         }
 
         /// <summary>
@@ -101,10 +103,24 @@ namespace ObjectHashServer.Services.Implementations
 
         private void AddTaggedByteArray(char tag, byte[] byteArray)
         {
+            byte[] tempHash;
             byte[] merged = new byte[byteArray.Length + 1];
             byteArray.CopyTo(merged, 1);
             merged[0] = (byte)tag;
-            hash = digester.ComputeHash(merged);
+            tempHash = digester.ComputeHash(merged);
+
+            if (salt == null)
+            {
+                hash = tempHash;
+            }
+            else
+            {
+                byte[][] hashList = new byte[2][];
+                hashList[0] = HashFromHex(salt);
+                hashList[1] = tempHash;
+
+                HashListOfHashes(hashList, 'l', false);
+            }
         }
 
         private void AddTaggedString(char tag, string value)
@@ -116,7 +132,7 @@ namespace ObjectHashServer.Services.Implementations
         {
             if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
             {
-                hash = FromHex(str.Substring(12, str.Length - 12));
+                hash = HashFromHex(str.Substring(12, str.Length - 12));
             }
             else
             {
@@ -161,7 +177,7 @@ namespace ObjectHashServer.Services.Implementations
             byte[][] hashList = new byte[array.Count][];
             for (int i = 0; i < array.Count; i++)
             {
-                ObjectHashImplementation aElementHash = new ObjectHashImplementation();
+                ObjectHashImplementation aElementHash = new ObjectHashImplementation(salt);
                 aElementHash.HashJToken(array[i]);
                 hashList[i] = aElementHash.HashAsByteArray();
             }
@@ -176,10 +192,10 @@ namespace ObjectHashServer.Services.Implementations
             int i = 0;
             foreach (var o in obj)
             {
-                ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
+                ObjectHashImplementation jKeyHash = new ObjectHashImplementation(salt);
                 jKeyHash.HashString(o.Key);
 
-                ObjectHashImplementation jValHash = new ObjectHashImplementation();
+                ObjectHashImplementation jValHash = new ObjectHashImplementation(salt);
                 jValHash.HashJToken(o.Value);
 
                 // merge both hashes (of key and value)
@@ -245,17 +261,17 @@ namespace ObjectHashServer.Services.Implementations
             return hex.ToString();
         }
 
-        private static byte[] FromHex(string hex)
+        private static byte[] HashFromHex(string hash)
         {
-            try { 
-                return Enumerable.Range(0, hex.Length)
-                     .Where(x => x % 2 == 0)
-                     .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-                     .ToArray();
-            } catch(FormatException e)
+            if (hash.Length != (HASH_ALGORITHM_BLOCK_SIZE * 2) || !System.Text.RegularExpressions.Regex.IsMatch(hash, @"\A\b[0-9a-fA-F]+\b\Z"))
             {
-                throw new BadRequestException("The provided redact hash does not contain a valid SHA256 (64 char, hex only)", e);
+                throw new BadRequestException($"The provided hash or salt is not a valid {HASH_ALGORITHM} ({HASH_ALGORITHM_BLOCK_SIZE * 2} characters, hex only)");
             }
+
+            return Enumerable.Range(0, hash.Length)
+                 .Where(x => x % 2 == 0)
+                 .Select(x => Convert.ToByte(hash.Substring(x, 2), 16))
+                 .ToArray();
         }
 
         /// <summary>
