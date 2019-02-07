@@ -17,13 +17,13 @@ namespace ObjectHashServer.Models
         public JToken RedactSettings { get; set; }
         public string Salt { get; set; }
 
-        // returns calculated Hash
         public string Hash
         {
             get
             {
-                // this is the real call to the object hash implementation
-                ObjectHashImplementation h = new ObjectHashImplementation(Salt);
+                // do not add the salt here as we want the hash calculation to
+                // be independent of the salt
+                ObjectHashImplementation h = new ObjectHashImplementation();
                 h.HashJToken(Data);
                 return h.HashAsString(); 
             }
@@ -39,6 +39,7 @@ namespace ObjectHashServer.Models
                     return Data;
                 }
 
+                // the redaction should be salt depending 
                 JsonRedactionImplementation service = new JsonRedactionImplementation(Salt);
                 return service.RedactJson(Data, RedactSettings);
             }

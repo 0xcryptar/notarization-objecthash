@@ -15,16 +15,14 @@ namespace ObjectHashServer.Services.Implementations
     /// </summary>
     public class ObjectHashImplementation
     {
-        // constants
         private static readonly string HASH_ALGORITHM = "SHA-256";
         private static readonly int HASH_ALGORITHM_BLOCK_SIZE = 32;
         private static readonly bool SORT_ARRAY = false;
         private static readonly StringComparison STRING_COMPARE_METHOD = StringComparison.Ordinal;
         private static readonly NormalizationForm STRING_NORMALIZATION = NormalizationForm.FormC;
 
-        // private variables
-        private byte[] hash;
         private readonly string salt;
+        private byte[] hash;
         private HashAlgorithm digester;
         private MemoryStream memoryStream;
 
@@ -130,7 +128,11 @@ namespace ObjectHashServer.Services.Implementations
 
         private void HashString(string str)
         {
-            if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
+            if (str.StartsWith("**S_REDACTED**", STRING_COMPARE_METHOD) && str.Length == 78)
+            {
+                throw new BadRequestException("You want to rehash a salted, redacated object. That is not possible. Please only hash the object without salted redaction.");
+            }
+            else if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
             {
                 hash = HashFromHex(str.Substring(12, str.Length - 12));
             }
@@ -182,7 +184,7 @@ namespace ObjectHashServer.Services.Implementations
                 hashList[i] = aElementHash.HashAsByteArray();
             }
 
-            // sorting arrays can be useful, but the default should be not to sort arrays
+            // sorting arrays can be needed, but the default should be not to sort arrays
             HashListOfHashes(hashList, 'l', SORT_ARRAY);
         }
 
@@ -192,6 +194,13 @@ namespace ObjectHashServer.Services.Implementations
             int i = 0;
             foreach (var o in obj)
             {
+                // TODO: check with ObecjtHash implementation of Ben Laurie
+                // they do not set the salt as first part of an array but  
+                // prepend the salt (in hex) infront of the key
+
+                // ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
+                // jKeyHash.HashString(salt + o.Key);
+
                 ObjectHashImplementation jKeyHash = new ObjectHashImplementation(salt);
                 jKeyHash.HashString(o.Key);
 
@@ -215,7 +224,6 @@ namespace ObjectHashServer.Services.Implementations
                 Array.Sort(hashList, (x, y) => string.Compare(ToHex(x), ToHex(y), STRING_COMPARE_METHOD));
             }
 
-            // hashing
             memoryStream.Flush();
             memoryStream.WriteByte((byte)type);
             for (int i = 0; i < hashList.GetLength(0); i++)

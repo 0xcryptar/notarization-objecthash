@@ -35,19 +35,24 @@ namespace ObjectHashServer.Services.Implementations
         {
             switch (redactSettings.Type)
             {
-                case JTokenType.Boolean:
+                case JTokenType.String:
                     ObjectHashImplementation objectHash;
 
-                    if ((bool)redactSettings)
+                    switch ((string)redactSettings)
                     {
-                        objectHash = new ObjectHashImplementation(salt);
-                        objectHash.HashJToken(json);
-                        return "**REDACTED**" + objectHash.HashAsString();
+                        case "redact":
+                            objectHash = new ObjectHashImplementation();
+                            objectHash.HashJToken(json);
+                            return "**REDACTED**" + objectHash.HashAsString();
+                        case "s_redact":
+                            objectHash = new ObjectHashImplementation(salt);
+                            objectHash.HashJToken(json);
+                            return "**S_REDACTED**" + objectHash.HashAsString();
+                        case "no_redact":
+                            return json;
+                        default:
+                            throw new BadRequestException("The provided redaction type is invalid. Possible redaction types are: ['redact', 's_redact', 'no_redact']");
                     } 
-                    else
-                    {
-                        return json;
-                    }
                 case JTokenType.Object:
                     try
                     {
