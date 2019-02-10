@@ -190,8 +190,44 @@ namespace ObjectHashServer.Services.Implementations
 
         private void HashObject(JObject obj)
         {
+            // TODO: make inline enum
+            string type = "";
+
+            foreach (var o in obj)
+            {
+                if (o.Key.StartsWith("REDACT:"))
+                {
+                    if(type == "newhash")
+                    {
+                        throw new BadRequestException("Warning");
+                    }
+
+                    type = "rehash";
+                } else
+                {
+                    if (type == "rehash")
+                    {
+                        throw new BadRequestException("Warning");
+                    }
+
+                    type = "newhash";
+                }
+            }
+
+            if(type == "rehash")
+            {
+                RehashObject(obj);
+            } else
+            {
+                NewHashObject(obj);
+            }
+        }
+
+        private void NewHashObject(JObject obj)
+        {
             byte[][] hashList = new byte[obj.Count][];
             int i = 0;
+
             foreach (var o in obj)
             {
                 // TODO: check with ObecjtHash implementation of Ben Laurie
@@ -201,7 +237,7 @@ namespace ObjectHashServer.Services.Implementations
                 // ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
                 // jKeyHash.HashString(salt + o.Key);
 
-                ObjectHashImplementation jKeyHash = new ObjectHashImplementation(salt);
+                ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
                 jKeyHash.HashString(o.Key);
 
                 ObjectHashImplementation jValHash = new ObjectHashImplementation(salt);
@@ -214,6 +250,27 @@ namespace ObjectHashServer.Services.Implementations
 
             // objects should always be sorted
             HashListOfHashes(hashList, 'd', true);
+        }
+
+        private void RehashObject(JObject obj)
+        {
+            if(obj.ContainsKey("REDACT:data"))
+            {
+                HashObject((JObject)obj["REDACT:data"]);
+                if(obj.ContainsKey("REDACT:hash"))
+                {
+                    if(HashAsString() != (string)obj["REDACT:hash"])
+                    {
+                        throw new BadRequestException("Warning");
+                    }
+                }
+            } else if(obj.ContainsKey("REDACT:hash"))
+            {
+                hash = HashFromHex((string)obj["REDACT:hash"]);
+            } else
+            {
+                throw new BadRequestException("Warning");
+            }
         }
 
         private void HashListOfHashes(byte[][] hashList, char type, bool sortArray = false)
