@@ -15,46 +15,44 @@ namespace ObjectHashServer.Services.Implementations
     /// </summary>
     public class ObjectHashImplementation
     {
+        private static readonly bool SORT_ARRAY = false;
         private static readonly string HASH_ALGORITHM = "SHA-256";
         private static readonly int HASH_ALGORITHM_BLOCK_SIZE = 32;
-        private static readonly bool SORT_ARRAY = false;
         private static readonly StringComparison STRING_COMPARE_METHOD = StringComparison.Ordinal;
         private static readonly NormalizationForm STRING_NORMALIZATION = NormalizationForm.FormC;
 
-        private readonly string salt;
         private byte[] hash;
         private HashAlgorithm digester;
         private MemoryStream memoryStream;
 
-        public ObjectHashImplementation(string salt = null)
+        public ObjectHashImplementation()
         {
-            this.salt = salt;      
-            this.hash = new byte[HASH_ALGORITHM_BLOCK_SIZE];
-            this.digester = HashAlgorithm.Create(HASH_ALGORITHM);
-            this.memoryStream = new MemoryStream();
+            hash = new byte[HASH_ALGORITHM_BLOCK_SIZE];
+            digester = HashAlgorithm.Create(HASH_ALGORITHM);
+            memoryStream = new MemoryStream();
         }
 
         /// <summary>
         /// Add any data to the hash calcualtion of the ObjectHashImplementation object.
         /// </summary>
         /// <param name="json">Any valid (RFC 7159 and ECMA-404) JSON data as JToken</param>
-        public void HashJToken(JToken json)
+        public void HashJToken(JToken json, JToken salts = null)
         {
             switch (json.Type)
             {
                 case JTokenType.Array:
                     {
-                        HashArray((JArray)json);
+                        HashArray((JArray)json, salts != null ? (JArray)salts : null);
                         break;
                     }
                 case JTokenType.Object:
                     {
-                        HashObject((JObject)json);
+                        HashObject((JObject)json, salts != null ? (JObject)salts : null);
                         break;
                     }
                 case JTokenType.Integer:
                     {
-                        HashLong((long)json);
+                        HashLong((long)json, salts != null ? (string)salts : null);
                         break;
                     }
                 case JTokenType.String:
@@ -62,34 +60,34 @@ namespace ObjectHashServer.Services.Implementations
                 case JTokenType.Guid:
                 case JTokenType.Uri:
                     {
-                        HashString((string)json);
+                        HashString((string)json, salts != null ? (string)salts : null);
                         break;
                     }
                 case JTokenType.Null: 
                 case JTokenType.None:
                     {
-                        HashNull();
+                        HashNull(salts != null ? (string)salts : null);
                         break;
                     }
                 case JTokenType.Boolean:
                     {
-                        HashBoolean((bool)json);
+                        HashBoolean((bool)json, salts != null ? (string)salts : null);
                         break;
                     }
                 case JTokenType.Float:
                     {
                         // TODO: check if not to use float instead of double
-                        HashDouble((double)json);
+                        HashDouble((double)json, salts != null ? (string)salts : null);
                         break;
                     }
                 case JTokenType.Bytes:
                     {
-                        HashBytes((byte[])json);
+                        HashBytes((byte[])json, salts != null ? (string)salts : null);
                         break;
                     }
                 case JTokenType.Date:
                     {
-                        HashDateTime((DateTime)json);
+                        HashDateTime((DateTime)json, salts != null ? (string)salts : null);
                         break;
                     }
                 default:
@@ -99,7 +97,7 @@ namespace ObjectHashServer.Services.Implementations
             }
         }
 
-        private void AddTaggedByteArray(char tag, byte[] byteArray)
+        private void AddTaggedByteArray(char tag, byte[] byteArray, string salt = null)
         {
             byte[] tempHash;
             byte[] merged = new byte[byteArray.Length + 1];
@@ -107,11 +105,7 @@ namespace ObjectHashServer.Services.Implementations
             merged[0] = (byte)tag;
             tempHash = digester.ComputeHash(merged);
 
-            if (salt == null)
-            {
-                hash = tempHash;
-            }
-            else
+            if (salt != null)
             {
                 byte[][] hashList = new byte[2][];
                 hashList[0] = HashFromHex(salt);
@@ -119,68 +113,68 @@ namespace ObjectHashServer.Services.Implementations
 
                 HashListOfHashes(hashList, 'l', false);
             }
-        }
-
-        private void AddTaggedString(char tag, string value)
-        {
-            AddTaggedByteArray(tag, Encoding.UTF8.GetBytes(value));
-        }
-
-        private void HashString(string str)
-        {
-            if (str.StartsWith("**S_REDACTED**", STRING_COMPARE_METHOD) && str.Length == 78)
+            else
             {
-                throw new BadRequestException("You want to rehash a salted, redacated object. That is not possible. Please only hash the object without salted redaction.");
+                hash = tempHash;
             }
-            else if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
+        }
+
+        private void AddTaggedString(char tag, string value, string salt = null)
+        {
+            AddTaggedByteArray(tag, Encoding.UTF8.GetBytes(value), salt);
+        }
+
+        private void HashString(string str, string salt = null)
+        {
+            if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
             {
                 hash = HashFromHex(str.Substring(12, str.Length - 12));
             }
             else
             {
-                AddTaggedString('u', str.Normalize(STRING_NORMALIZATION));
+                AddTaggedString('u', str.Normalize(STRING_NORMALIZATION), salt);
             }
         }
 
-        private void HashLong(long value)
+        private void HashLong(long value, string salt = null)
         {
-            AddTaggedString('i', value.ToString());
+            AddTaggedString('i', value.ToString(), salt);
         }
 
-        private void HashDouble(double value)
+        private void HashDouble(double value, string salt = null)
         {
-            AddTaggedString('f', NormalizeDouble(value));
+            AddTaggedString('f', NormalizeDouble(value), salt);
         }
 
-        private void HashNull()
+        private void HashNull(string salt = null)
         {
-            AddTaggedString('n', "");
+            AddTaggedString('n', "", salt);
         }
 
-        private void HashBoolean(bool b)
+        private void HashBoolean(bool b, string salt = null)
         {
-            AddTaggedString('b', b ? "1" : "0");
+            AddTaggedString('b', b ? "1" : "0", salt);
         }
 
-        private void HashDateTime(DateTime t)
+        private void HashDateTime(DateTime t, string salt = null)
         {
             // normalize DateTime to UTC and ISO 8601
-            AddTaggedString('t', t.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+            AddTaggedString('t', t.ToString("yyyy-MM-ddTHH:mm:ssZ"), salt);
         }
 
-        private void HashBytes(byte[] bs)
+        private void HashBytes(byte[] bs, string salt = null)
         {
             // TODO: think about if 'l' is a good tag
-            AddTaggedByteArray('l', bs);
+            AddTaggedByteArray('l', bs, salt);
         }
 
-        private void HashArray(JArray array)
+        private void HashArray(JArray array, JArray salts = null)
         {
             byte[][] hashList = new byte[array.Count][];
             for (int i = 0; i < array.Count; i++)
             {
-                ObjectHashImplementation aElementHash = new ObjectHashImplementation(salt);
-                aElementHash.HashJToken(array[i]);
+                ObjectHashImplementation aElementHash = new ObjectHashImplementation();
+                aElementHash.HashJToken(array[i], salts[i]);
                 hashList[i] = aElementHash.HashAsByteArray();
             }
 
@@ -188,60 +182,22 @@ namespace ObjectHashServer.Services.Implementations
             HashListOfHashes(hashList, 'l', SORT_ARRAY);
         }
 
-        private void HashObject(JObject obj)
-        {
-            // TODO: make inline enum
-            string type = "";
-
-            foreach (var o in obj)
-            {
-                if (o.Key.StartsWith("REDACT:"))
-                {
-                    if(type == "newhash")
-                    {
-                        throw new BadRequestException("Warning");
-                    }
-
-                    type = "rehash";
-                } else
-                {
-                    if (type == "rehash")
-                    {
-                        throw new BadRequestException("Warning");
-                    }
-
-                    type = "newhash";
-                }
-            }
-
-            if(type == "rehash")
-            {
-                RehashObject(obj);
-            } else
-            {
-                NewHashObject(obj);
-            }
-        }
-
-        private void NewHashObject(JObject obj)
+        private void HashObject(JObject obj, JObject salts = null)
         {
             byte[][] hashList = new byte[obj.Count][];
             int i = 0;
 
             foreach (var o in obj)
             {
-                // TODO: check with ObecjtHash implementation of Ben Laurie
-                // they do not set the salt as first part of an array but  
-                // prepend the salt (in hex) infront of the key
-
-                // ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
-                // jKeyHash.HashString(salt + o.Key);
-
                 ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
+                // TODO: check if ok
+                // object keys are not salted, i dont see a big issue for that
+                // but Ben Laurie does 
+                // jKeyHash.HashString(salts.Key + o.Key);
                 jKeyHash.HashString(o.Key);
 
-                ObjectHashImplementation jValHash = new ObjectHashImplementation(salt);
-                jValHash.HashJToken(o.Value);
+                ObjectHashImplementation jValHash = new ObjectHashImplementation();
+                jValHash.HashJToken(o.Value, salts[o.Key]);
 
                 // merge both hashes (of key and value)
                 hashList[i] = jKeyHash.HashAsByteArray().Concat(jValHash.HashAsByteArray()).ToArray();
@@ -250,27 +206,6 @@ namespace ObjectHashServer.Services.Implementations
 
             // objects should always be sorted
             HashListOfHashes(hashList, 'd', true);
-        }
-
-        private void RehashObject(JObject obj)
-        {
-            if(obj.ContainsKey("REDACT:data"))
-            {
-                HashObject((JObject)obj["REDACT:data"]);
-                if(obj.ContainsKey("REDACT:hash"))
-                {
-                    if(HashAsString() != (string)obj["REDACT:hash"])
-                    {
-                        throw new BadRequestException("Warning");
-                    }
-                }
-            } else if(obj.ContainsKey("REDACT:hash"))
-            {
-                hash = HashFromHex((string)obj["REDACT:hash"]);
-            } else
-            {
-                throw new BadRequestException("Warning");
-            }
         }
 
         private void HashListOfHashes(byte[][] hashList, char type, bool sortArray = false)
