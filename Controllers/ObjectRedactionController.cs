@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ObjectHashServer.Models;
-using ObjectHashServer.Models.API.Request;
-using ObjectHashServer.Models.API.Response;
+using ObjectHashServer.Models.Api.Request;
+using ObjectHashServer.Models.Api.Response;
+using ObjectHashServer.Services.Implementations;
 
 namespace ObjectHashServer.Controllers
 {
@@ -10,9 +11,14 @@ namespace ObjectHashServer.Controllers
     public class ObjectRedactionController : ControllerBase
     {
         [HttpPost]
-        public ActionResult<ObjectRedactionResponseModel> Post([FromBody]ObjectRedactionRequestModel model)
+        public ActionResult<ObjectRedactionResponseModel> Post([FromBody]ObjectRedactionRequestModel model, bool salting)
         {
             ObjectRedaction objectRedaction = new ObjectRedaction(model);
+            if (salting && objectRedaction.Salts == null)
+            {
+                GenerateSaltsImplementation gsi = new GenerateSaltsImplementation();
+                objectRedaction.Salts = gsi.SaltsForJToken(objectRedaction.Data);
+            }
             return new ObjectRedactionResponseModel(objectRedaction);
         }
     }

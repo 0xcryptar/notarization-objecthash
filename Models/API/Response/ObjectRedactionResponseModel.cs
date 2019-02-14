@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace ObjectHashServer.Models.API.Response
+namespace ObjectHashServer.Models.Api.Response
 {
     public class ObjectRedactionResponseModel : ResponseModel
     {
@@ -9,14 +9,15 @@ namespace ObjectHashServer.Models.API.Response
 
         public ObjectRedactionResponseModel(ObjectRedaction objectRedaction) : this()
         {
-            // TODO: return redacted data instead of data or as now property?
             Data = objectRedaction.RedactedData;
+            // RedactedData = objectRedaction.RedactedData;
+            Salts = objectRedaction.RedactedSalts;
+            // RedactedSalts = objectRedaction.RedactedSalts;
             RedactSettings = objectRedaction.RedactSettings;
-            Salts = objectRedaction.Salts;
         }
 
         public JToken Data { get; set; }
-        public JToken RedactSettings { get; set; }
         public JToken Salts { get; set; }
+        public JToken RedactSettings { get; set; }
     }
 }

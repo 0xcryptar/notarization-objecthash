@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace ObjectHashServer.Models.API.Response
+namespace ObjectHashServer.Models.Api.Response
 {
     public class ObjectHashResponseModel : ResponseModel
     {

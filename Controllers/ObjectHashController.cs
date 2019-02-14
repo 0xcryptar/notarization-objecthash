@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ObjectHashServer.Models;
-using ObjectHashServer.Models.API.Request;
-using ObjectHashServer.Models.API.Response;
+using ObjectHashServer.Models.Api.Request;
+using ObjectHashServer.Models.Api.Response;
+using ObjectHashServer.Services.Implementations;
 
 namespace ObjectHashServer.Controllers
 {
@@ -9,11 +10,19 @@ namespace ObjectHashServer.Controllers
     [ApiController]
     public class ObjectHashController : ControllerBase
     {
-        // TODO: check if GET with body is more natural REST
         [HttpPost]
-        public ActionResult<ObjectHashResponseModel> Post([FromBody]ObjectHashRequestModel model)
+        public ActionResult<ObjectHashResponseModel> Post([FromBody]ObjectHashRequestModel model, bool salting)
         {
             ObjectHash objectHash = new ObjectHash(model);
+            if(salting && objectHash.Salts == null)
+            {
+                GenerateSaltsImplementation gsi = new GenerateSaltsImplementation();
+                objectHash.Salts = gsi.SaltsForJToken(objectHash.Data);
+            }
+
+            // TODO: the return changes the pure data object
+            // eg. if the object contains a float value of 1.0 
+            // it is returned as integer
             return new ObjectHashResponseModel(objectHash);
         }
     }

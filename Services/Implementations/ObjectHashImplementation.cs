@@ -21,13 +21,13 @@ namespace ObjectHashServer.Services.Implementations
         private static readonly StringComparison STRING_COMPARE_METHOD = StringComparison.Ordinal;
         private static readonly NormalizationForm STRING_NORMALIZATION = NormalizationForm.FormC;
 
-        private byte[] hash;
+        public byte[] Hash { get; private set; }
         private HashAlgorithm digester;
         private MemoryStream memoryStream;
 
         public ObjectHashImplementation()
         {
-            hash = new byte[HASH_ALGORITHM_BLOCK_SIZE];
+            Hash = new byte[HASH_ALGORITHM_BLOCK_SIZE];
             digester = HashAlgorithm.Create(HASH_ALGORITHM);
             memoryStream = new MemoryStream();
         }
@@ -115,7 +115,7 @@ namespace ObjectHashServer.Services.Implementations
             }
             else
             {
-                hash = tempHash;
+                Hash = tempHash;
             }
         }
 
@@ -128,7 +128,7 @@ namespace ObjectHashServer.Services.Implementations
         {
             if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
             {
-                hash = HashFromHex(str.Substring(12, str.Length - 12));
+                Hash = HashFromHex(str.Substring(12, str.Length - 12));
             }
             else
             {
@@ -174,8 +174,8 @@ namespace ObjectHashServer.Services.Implementations
             for (int i = 0; i < array.Count; i++)
             {
                 ObjectHashImplementation aElementHash = new ObjectHashImplementation();
-                aElementHash.HashJToken(array[i], salts[i]);
-                hashList[i] = aElementHash.HashAsByteArray();
+                aElementHash.HashJToken(array[i], salts?[i]);
+                hashList[i] = aElementHash.Hash;
             }
 
             // sorting arrays can be needed, but the default should be not to sort arrays
@@ -197,10 +197,10 @@ namespace ObjectHashServer.Services.Implementations
                 jKeyHash.HashString(o.Key);
 
                 ObjectHashImplementation jValHash = new ObjectHashImplementation();
-                jValHash.HashJToken(o.Value, salts[o.Key]);
+                jValHash.HashJToken(o.Value, salts?[o.Key]);
 
                 // merge both hashes (of key and value)
-                hashList[i] = jKeyHash.HashAsByteArray().Concat(jValHash.HashAsByteArray()).ToArray();
+                hashList[i] = jKeyHash.Hash.Concat(jValHash.Hash).ToArray();
                 i++;
             }
 
@@ -222,7 +222,7 @@ namespace ObjectHashServer.Services.Implementations
             {
                 memoryStream.Write(hashList[i]);
             }
-            hash = digester.ComputeHash(memoryStream.ToArray());
+            Hash = digester.ComputeHash(memoryStream.ToArray());
         }
 
         private string DebugString()
@@ -241,14 +241,9 @@ namespace ObjectHashServer.Services.Implementations
             return string.Compare(HashAsString(), other.HashAsString(), STRING_COMPARE_METHOD);
         }
 
-        public byte[] HashAsByteArray()
-        {
-            return hash;
-        }
-
         public string HashAsString()
         {
-            return ToHex(HashAsByteArray());
+            return ToHex(Hash);
         }
 
         private static string ToHex(byte[] ba)

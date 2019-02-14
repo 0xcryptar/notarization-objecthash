@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace ObjectHashServer.Models.API.Response
+namespace ObjectHashServer.Models.Api.Response
 {
     public class ErrorResponseModel : ResponseModel
     {

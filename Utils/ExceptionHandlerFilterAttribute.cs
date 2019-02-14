@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ObjectHashServer.Exceptions;
-using ObjectHashServer.Models.API.Response;
+using ObjectHashServer.Models.Api.Response;
 
 namespace ObjectHashServer.Utils
 {

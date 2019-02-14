@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json.Linq;
 
-namespace ObjectHashServer.Models.API.Request
+namespace ObjectHashServer.Models.Api.Request
 {
     public class ObjectRedactionRequestModel
     {

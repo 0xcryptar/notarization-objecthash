@@ -10,19 +10,23 @@ namespace ObjectHashServer.Services.Implementations
     {
         private static readonly int HASH_ALGORITHM_BLOCK_SIZE = 32;
 
-        public void GenerateSalts(JToken json)
+        public JToken SaltsForJToken(JToken json)
+        {
+            JToken jsonClone = json.DeepClone();
+            return RecursivlyOverrideJTokenWithSalts(jsonClone);
+        }
+
+        private JToken RecursivlyOverrideJTokenWithSalts(JToken json)
         {
             switch (json.Type)
             {
                 case JTokenType.Array:
                     {
-                        GenerateSaltsForArray((JArray)json);
-                        break;
+                        return OverrideArrayWithSalts((JArray)json);
                     }
                 case JTokenType.Object:
                     {
-                        GenerateSaltsForObject((JObject)json);
-                        break;
+                        return OverrideObjectWithSalts((JObject)json);
                     }
                 case JTokenType.Integer:
                 case JTokenType.String:
@@ -36,8 +40,7 @@ namespace ObjectHashServer.Services.Implementations
                 case JTokenType.Bytes:
                 case JTokenType.Date:
                     {
-                        GenerateSaltForLeaf();
-                        break;
+                        return GenerateSaltForLeaf();
                     }
                 default:
                     {
@@ -54,29 +57,26 @@ namespace ObjectHashServer.Services.Implementations
             return ToHex(buffer);
         }
 
-        private void GenerateSaltsForArray(JArray array)
+        private JArray OverrideArrayWithSalts(JArray array)
         {
-            // byte[][] hashList = new byte[array.Count][];
+            JArray result = new JArray();
             for (int i = 0; i < array.Count; i++)
             {
-                GenerateSaltsImplementation aElementHash = new GenerateSaltsImplementation();
-                // aElementHash.HashJToken(array[i], salts[i]);
-                // hashList[i] = aElementHash.HashAsByteArray();
+                GenerateSaltsImplementation element = new GenerateSaltsImplementation();
+                result.Add(element.RecursivlyOverrideJTokenWithSalts(array[i]));
             }
+            return result;
         }
 
-        private void GenerateSaltsForObject(JObject obj)
+        private JObject OverrideObjectWithSalts(JObject obj)
         {
-            byte[][] hashList = new byte[obj.Count][];
-
+            JObject result = new JObject();
             foreach (var o in obj)
             {
-                GenerateSaltsImplementation jKeyHash = new GenerateSaltsImplementation();
-                // jKeyHash.HashString(o.Key);
-
-                GenerateSaltsImplementation jValHash = new GenerateSaltsImplementation();
-                // jValHash.HashJToken(o.Value, salts[o.Key]);
+                GenerateSaltsImplementation value = new GenerateSaltsImplementation();
+                result[o.Key] = value.RecursivlyOverrideJTokenWithSalts(o.Value);
             }
+            return result;
         }
 
         private static string ToHex(byte[] ba)

@@ -1,5 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
-using ObjectHashServer.Models.API.Request;
+﻿using System;
+using Newtonsoft.Json.Linq;
+using ObjectHashServer.Models.Api.Request;
 using ObjectHashServer.Services.Implementations;
 
 namespace ObjectHashServer.Models
@@ -9,27 +10,32 @@ namespace ObjectHashServer.Models
         public ObjectRedaction(ObjectRedactionRequestModel model)
         {
             Data = model.Data;
-            RedactSettings = model.RedactSettings;
             Salts = model.Salts;
+            RedactSettings = model.RedactSettings;
         }
 
         public JToken Data { get; set; }
-        public JToken RedactSettings { get; set; }
         public JToken Salts { get; set; }
+        public JToken RedactSettings { get; set; }
 
+        // TODO: optimze
+        private JToken redactedData;
         public JToken RedactedData
         {
-            get
-            {
-                if (RedactSettings == null)
-                {
-                    return Data;
-                }
+            get { UpdateRedactedData(); return redactedData; }
+            private set { redactedData = value; }
+        }
+        private JToken redactedSalts;
+        public JToken RedactedSalts
+        {
+            get { UpdateRedactedData(); return redactedSalts; }
+            private set { redactedSalts = value; }
+        }
 
-                // TODO: JsonRedactionImplementation service = new JsonRedactionImplementation();
-                // return service.RedactJson(Data, RedactSettings, Salts);
-                return null;
-            }
+        private void UpdateRedactedData()
+        {
+            ObjectRedactionImplementation r = new ObjectRedactionImplementation();
+            (RedactedData, RedactedSalts) = r.RedactJToken(Data, RedactSettings, Salts);
         }
     }
 }

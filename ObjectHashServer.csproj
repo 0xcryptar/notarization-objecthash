@@ -6,9 +6,9 @@
 
   <ItemGroup>
     <Folder Include="Models\" />
-    <Folder Include="Models\API\" />
-    <Folder Include="Models\API\Request\" />
-    <Folder Include="Models\API\Response\" />
+    <Folder Include="Models\Api\" />
+    <Folder Include="Models\Api\Request\" />
+    <Folder Include="Models\Api\Response\" />
     <Folder Include="Services\" />
     <Folder Include="Services\Implementations\" />
     <Folder Include="Exceptions\" />
@@ -21,6 +21,6 @@
     <PackageReference Include="Sentry.AspNetCore" Version="1.1.2" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove=".gitignore" />
+    <Compile Remove="Services\Implementations\SaltsRedactionImplementation.cs" />
   </ItemGroup>
 </Project>
