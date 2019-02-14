@@ -18,7 +18,7 @@ namespace ObjectHashServer.Models
         public JToken Salts { get; set; }
         public JToken RedactSettings { get; set; }
 
-        // TODO: optimze
+        // TODO: optimize
         private JToken redactedData;
         public JToken RedactedData
         {

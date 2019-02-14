@@ -20,7 +20,4 @@
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
     <PackageReference Include="Sentry.AspNetCore" Version="1.1.2" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Services\Implementations\SaltsRedactionImplementation.cs" />
-  </ItemGroup>
 </Project>
