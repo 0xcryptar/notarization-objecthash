@@ -3,11 +3,14 @@ using Newtonsoft.Json.Linq;
 
 namespace ObjectHashServer.Models.API.Request
 {
-    public class ObjectHashRequestModel
+    public class ObjectRedactionRequestModel
     {
         [Required]
-        public JToken Object { get; set; }
+        public JToken Data { get; set; }
+        [Required]
+        public JToken RedactSettings { get; set; }
         // optional
         public JToken Salts { get; set; }
     }
 }
+
