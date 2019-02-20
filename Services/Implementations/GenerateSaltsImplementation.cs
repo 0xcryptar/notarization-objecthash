@@ -3,12 +3,25 @@ using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
+using ObjectHashServer.Models.Api.Request;
+using ObjectHashServer.Models.Extensions;
 
 namespace ObjectHashServer.Services.Implementations
 {
     public class GenerateSaltsImplementation
     {
         private static readonly int HASH_ALGORITHM_BLOCK_SIZE = 32;
+
+        public static void SaltsForObjectBaseRequestModel(ObjectBaseRequestModel model)
+        {
+            if (!model.Salts.IsNullOrEmpty())
+            {
+                throw new BadRequestException("You want to generate new salts but you send salts with the request. Please either generate new salts or send them with the request.");
+            }
+
+            GenerateSaltsImplementation gsi = new GenerateSaltsImplementation();
+            model.Salts = gsi.SaltsForJToken(model.Data);
+        }
 
         public JToken SaltsForJToken(JToken json)
         {

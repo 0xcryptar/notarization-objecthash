@@ -11,15 +11,13 @@ namespace ObjectHashServer.Controllers
     public class ObjectRedactionController : ControllerBase
     {
         [HttpPost]
-        public ActionResult<ObjectRedactionResponseModel> Post([FromBody]ObjectRedactionRequestModel model, bool salting)
+        public ActionResult<ObjectRedactionResponseModel> Post([FromBody]ObjectRedactionRequestModel model, [FromQuery]bool generateSalts)
         {
-            ObjectRedaction objectRedaction = new ObjectRedaction(model);
-            if (salting && objectRedaction.Salts == null)
+            if (generateSalts)
             {
-                GenerateSaltsImplementation gsi = new GenerateSaltsImplementation();
-                objectRedaction.Salts = gsi.SaltsForJToken(objectRedaction.Data);
+                GenerateSaltsImplementation.SaltsForObjectBaseRequestModel(model);
             }
-            return new ObjectRedactionResponseModel(objectRedaction);
+            return new ObjectRedactionResponseModel(new ObjectRedaction(model));
         }
     }
 }

@@ -11,19 +11,16 @@ namespace ObjectHashServer.Controllers
     public class ObjectHashController : ControllerBase
     {
         [HttpPost]
-        public ActionResult<ObjectHashResponseModel> Post([FromBody]ObjectHashRequestModel model, bool salting)
+        public ActionResult<ObjectHashResponseModel> Post([FromBody]ObjectHashRequestModel model, [FromQuery]bool generateSalts)
         {
-            ObjectHash objectHash = new ObjectHash(model);
-            if(salting && objectHash.Salts == null)
+            if(generateSalts)
             {
-                GenerateSaltsImplementation gsi = new GenerateSaltsImplementation();
-                objectHash.Salts = gsi.SaltsForJToken(objectHash.Data);
-            }
-
+                GenerateSaltsImplementation.SaltsForObjectBaseRequestModel(model);
+            } 
             // TODO: the return changes the pure data object
             // eg. if the object contains a float value of 1.0 
             // it is returned as integer
-            return new ObjectHashResponseModel(objectHash);
+            return new ObjectHashResponseModel(new ObjectHash(model));
         }
     }
 }

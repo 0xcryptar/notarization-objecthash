@@ -1,5 +1,4 @@
-﻿using System;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using ObjectHashServer.Models.Api.Request;
 using ObjectHashServer.Services.Implementations;
 

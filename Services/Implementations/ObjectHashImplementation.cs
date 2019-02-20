@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
+using ObjectHashServer.Models.Extensions;
 
 namespace ObjectHashServer.Services.Implementations
 {
@@ -42,17 +43,17 @@ namespace ObjectHashServer.Services.Implementations
             {
                 case JTokenType.Array:
                     {
-                        HashArray((JArray)json, salts != null ? (JArray)salts : null);
+                        HashArray((JArray)json, salts);
                         break;
                     }
                 case JTokenType.Object:
                     {
-                        HashObject((JObject)json, salts != null ? (JObject)salts : null);
+                        HashObject((JObject)json, salts);
                         break;
                     }
                 case JTokenType.Integer:
                     {
-                        HashLong((long)json, salts != null ? (string)salts : null);
+                        HashLong((long)json, salts);
                         break;
                     }
                 case JTokenType.String:
@@ -60,34 +61,34 @@ namespace ObjectHashServer.Services.Implementations
                 case JTokenType.Guid:
                 case JTokenType.Uri:
                     {
-                        HashString((string)json, salts != null ? (string)salts : null);
+                        HashString((string)json, salts);
                         break;
                     }
                 case JTokenType.Null: 
                 case JTokenType.None:
                     {
-                        HashNull(salts != null ? (string)salts : null);
+                        HashNull(salts);
                         break;
                     }
                 case JTokenType.Boolean:
                     {
-                        HashBoolean((bool)json, salts != null ? (string)salts : null);
+                        HashBoolean((bool)json, salts);
                         break;
                     }
                 case JTokenType.Float:
                     {
                         // TODO: check if not to use float instead of double
-                        HashDouble((double)json, salts != null ? (string)salts : null);
+                        HashDouble((double)json, salts);
                         break;
                     }
                 case JTokenType.Bytes:
                     {
-                        HashBytes((byte[])json, salts != null ? (string)salts : null);
+                        HashBytes((byte[])json, salts);
                         break;
                     }
                 case JTokenType.Date:
                     {
-                        HashDateTime((DateTime)json, salts != null ? (string)salts : null);
+                        HashDateTime((DateTime)json, salts);
                         break;
                     }
                 default:
@@ -97,7 +98,7 @@ namespace ObjectHashServer.Services.Implementations
             }
         }
 
-        private void AddTaggedByteArray(char tag, byte[] byteArray, string salt = null)
+        private void AddTaggedByteArray(char tag, byte[] byteArray, JToken salt = null)
         {
             byte[] tempHash;
             byte[] merged = new byte[byteArray.Length + 1];
@@ -108,7 +109,7 @@ namespace ObjectHashServer.Services.Implementations
             if (salt != null)
             {
                 byte[][] hashList = new byte[2][];
-                hashList[0] = HashFromHex(salt);
+                hashList[0] = HashFromHex((string)salt);
                 hashList[1] = tempHash;
 
                 HashListOfHashes(hashList, 'l', false);
@@ -119,12 +120,12 @@ namespace ObjectHashServer.Services.Implementations
             }
         }
 
-        private void AddTaggedString(char tag, string value, string salt = null)
+        private void AddTaggedString(char tag, string value, JToken salt = null)
         {
             AddTaggedByteArray(tag, Encoding.UTF8.GetBytes(value), salt);
         }
 
-        private void HashString(string str, string salt = null)
+        private void HashString(string str, JToken salt = null)
         {
             if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
             {
@@ -136,39 +137,39 @@ namespace ObjectHashServer.Services.Implementations
             }
         }
 
-        private void HashLong(long value, string salt = null)
+        private void HashLong(long value, JToken salt = null)
         {
             AddTaggedString('i', value.ToString(), salt);
         }
 
-        private void HashDouble(double value, string salt = null)
+        private void HashDouble(double value, JToken salt = null)
         {
             AddTaggedString('f', NormalizeDouble(value), salt);
         }
 
-        private void HashNull(string salt = null)
+        private void HashNull(JToken salt = null)
         {
             AddTaggedString('n', "", salt);
         }
 
-        private void HashBoolean(bool b, string salt = null)
+        private void HashBoolean(bool b, JToken salt = null)
         {
             AddTaggedString('b', b ? "1" : "0", salt);
         }
 
-        private void HashDateTime(DateTime t, string salt = null)
+        private void HashDateTime(DateTime t, JToken salt = null)
         {
             // normalize DateTime to UTC and ISO 8601
             AddTaggedString('t', t.ToString("yyyy-MM-ddTHH:mm:ssZ"), salt);
         }
 
-        private void HashBytes(byte[] bs, string salt = null)
+        private void HashBytes(byte[] bs, JToken salt = null)
         {
             // TODO: think about if 'l' is a good tag
             AddTaggedByteArray('l', bs, salt);
         }
 
-        private void HashArray(JArray array, JArray salts = null)
+        private void HashArray(JArray array, JToken salts = null)
         {
             byte[][] hashList = new byte[array.Count][];
             for (int i = 0; i < array.Count; i++)
@@ -182,7 +183,7 @@ namespace ObjectHashServer.Services.Implementations
             HashListOfHashes(hashList, 'l', SORT_ARRAY);
         }
 
-        private void HashObject(JObject obj, JObject salts = null)
+        private void HashObject(JObject obj, JToken salts = null)
         {
             byte[][] hashList = new byte[obj.Count][];
             int i = 0;
