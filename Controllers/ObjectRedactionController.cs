@@ -11,12 +11,8 @@ namespace ObjectHashServer.Controllers
     public class ObjectRedactionController : ControllerBase
     {
         [HttpPost]
-        public ActionResult<ObjectRedactionResponseModel> Post([FromBody]ObjectRedactionRequestModel model, [FromQuery]bool generateSalts)
+        public ActionResult<ObjectRedactionResponseModel> Post([FromBody]ObjectRedactionRequestModel model)
         {
-            if (generateSalts)
-            {
-                GenerateSaltsImplementation.SaltsForObjectBaseRequestModel(model);
-            }
             return new ObjectRedactionResponseModel(new ObjectRedaction(model));
         }
     }

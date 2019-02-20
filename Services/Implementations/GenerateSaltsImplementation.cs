@@ -41,8 +41,16 @@ namespace ObjectHashServer.Services.Implementations
                     {
                         return OverrideObjectWithSalts((JObject)json);
                     }
-                case JTokenType.Integer:
                 case JTokenType.String:
+                    {
+                        if(((string)json).StartsWith("**REDACTED**", StringComparison.Ordinal))
+                        {
+                            return "**REDACTED*";
+                        }
+
+                        return GenerateSaltForLeaf();
+                    }
+                case JTokenType.Integer:
                 case JTokenType.TimeSpan:
                 case JTokenType.Guid:
                 case JTokenType.Uri:

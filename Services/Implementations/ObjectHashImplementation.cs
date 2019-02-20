@@ -43,12 +43,12 @@ namespace ObjectHashServer.Services.Implementations
             {
                 case JTokenType.Array:
                     {
-                        HashArray((JArray)json, salts);
+                        HashArray((JArray)json, salts.IsNullOrEmpty() ? null : (JArray)salts);
                         break;
                     }
                 case JTokenType.Object:
                     {
-                        HashObject((JObject)json, salts);
+                        HashObject((JObject)json, salts.IsNullOrEmpty() ? null : (JObject)salts);
                         break;
                     }
                 case JTokenType.Integer:
@@ -108,11 +108,16 @@ namespace ObjectHashServer.Services.Implementations
 
             if (salt != null)
             {
-                byte[][] hashList = new byte[2][];
-                hashList[0] = HashFromHex((string)salt);
-                hashList[1] = tempHash;
+                try
+                {
+                    byte[][] hashList = new byte[2][];
+                    hashList[0] = HashFromHex((string)salt);
+                    hashList[1] = tempHash;
 
-                HashListOfHashes(hashList, 'l', false);
+                    HashListOfHashes(hashList, 'l', false);
+                } catch(InvalidCastException) {
+                    throw new BadRequestException("The provided Salt object does not match the provided JSON object. Please check that the keys in the Salt and the JSON object are equal.");
+                }
             }
             else
             {
@@ -169,13 +174,13 @@ namespace ObjectHashServer.Services.Implementations
             AddTaggedByteArray('l', bs, salt);
         }
 
-        private void HashArray(JArray array, JToken salts = null)
+        private void HashArray(JArray array, JArray salts = null)
         {
             byte[][] hashList = new byte[array.Count][];
             for (int i = 0; i < array.Count; i++)
             {
                 ObjectHashImplementation aElementHash = new ObjectHashImplementation();
-                aElementHash.HashJToken(array[i], salts?[i]);
+                aElementHash.HashJToken(array[i], salts != null && salts.Count > i ? salts[i] : null);
                 hashList[i] = aElementHash.Hash;
             }
 
@@ -183,7 +188,7 @@ namespace ObjectHashServer.Services.Implementations
             HashListOfHashes(hashList, 'l', SORT_ARRAY);
         }
 
-        private void HashObject(JObject obj, JToken salts = null)
+        private void HashObject(JObject obj, JObject salts = null)
         {
             byte[][] hashList = new byte[obj.Count][];
             int i = 0;
@@ -191,14 +196,13 @@ namespace ObjectHashServer.Services.Implementations
             foreach (var o in obj)
             {
                 ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
-                // TODO: check if ok
+                // TODO: check if acceptable
                 // object keys are not salted, i dont see a big issue for that
-                // but Ben Laurie does 
                 // jKeyHash.HashString(salts.Key + o.Key);
                 jKeyHash.HashString(o.Key);
 
                 ObjectHashImplementation jValHash = new ObjectHashImplementation();
-                jValHash.HashJToken(o.Value, salts?[o.Key]);
+                jValHash.HashJToken(o.Value, salts != null && salts.ContainsKey(o.Key) ? salts[o.Key] : null);
 
                 // merge both hashes (of key and value)
                 hashList[i] = jKeyHash.Hash.Concat(jValHash.Hash).ToArray();

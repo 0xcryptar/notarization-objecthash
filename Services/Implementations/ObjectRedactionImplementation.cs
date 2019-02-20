@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
+using ObjectHashServer.Models.Extensions;
 
 namespace ObjectHashServer.Services.Implementations
 {
@@ -36,13 +37,7 @@ namespace ObjectHashServer.Services.Implementations
                 case JTokenType.Object:
                     try
                     {
-                        switch(json.Type)
-                        {
-                            case JTokenType.Array:
-                                return RedactArrayWithCommand((JArray)json, (JObject)redactSettings, salts);
-                            default:
-                                return RedactObject((JObject)json, (JObject)redactSettings, salts);
-                        }
+                        return RedactObject((JObject)json, (JObject)redactSettings, salts.IsNullOrEmpty() ? null : (JObject)salts);
                     }
                     catch (InvalidCastException e)
                     {
@@ -50,7 +45,7 @@ namespace ObjectHashServer.Services.Implementations
                     }
                 case JTokenType.Array:
                     try {
-                        return RedactArray((JArray)json, (JArray)redactSettings, salts);
+                        return RedactArray((JArray)json, (JArray)redactSettings, salts.IsNullOrEmpty() ? null : (JArray)salts);
                     }
                     catch(InvalidCastException e)
                     {
@@ -61,85 +56,57 @@ namespace ObjectHashServer.Services.Implementations
             }
         }
 
-        private (JToken json, JToken salts) RedactObject(JObject json, JObject redactSettings, JToken salts = null)
+        private (JToken json, JToken salts) RedactObject(JObject json, JObject redactSettings, JObject salts = null)
         {
             foreach (var redactSetting in redactSettings)
             {
-                // TODO: salt check if not null
-
-                // check if JSON object has same keys as the redact settings
-                if (!json.ContainsKey(redactSetting.Key))
+                if (!json.ContainsKey(redactSetting.Key) || (!salts.IsNullOrEmpty() && !salts.ContainsKey(redactSetting.Key)))
                 {
                     IDictionary additionalExceptionData = new Dictionary<string, object>
-                    {
-                        { "missingKey", redactSetting.Key }
-                    };
+                        {
+                            { "missingKey", redactSetting.Key },
+                            { "errorInObject", !json.ContainsKey(redactSetting.Key) ? "json" : "salts" }
+                        };
 
-                    throw new BadRequestException("The provided JSON has an object which is different from the object defined in the redact settings. Please check the JSON data or the redact settings.", additionalExceptionData);
+                    throw new BadRequestException("The provided JSON or Salt defines an object which is different from the redact settings object. Please check the JSON, the salt data or the redact settings.", additionalExceptionData);
                 }
 
-                (json[redactSetting.Key], salts[redactSetting.Key]) = RecursivlyRedactDataAndSalts(json[redactSetting.Key], redactSettings[redactSetting.Key], salts?[redactSetting.Key]);
+                if(salts.IsNullOrEmpty())
+                {
+                    (json[redactSetting.Key], _) = RecursivlyRedactDataAndSalts(json[redactSetting.Key], redactSettings[redactSetting.Key], null);
+                }
+                else
+                {
+                    (json[redactSetting.Key], salts[redactSetting.Key]) = RecursivlyRedactDataAndSalts(json[redactSetting.Key], redactSettings[redactSetting.Key], salts[redactSetting.Key]);
+                }
             }
 
             return (json, salts);
         }
 
-        private (JToken json, JToken salts) RedactArray(JArray json, JArray redactSettings, JToken salts = null)
+        private (JToken json, JToken salts) RedactArray(JArray json, JArray redactSettings, JArray salts = null)
         {
-            // TODO: if salt not null check amount is the same
-
-            // check if the arrays have same size
-            if (redactSettings.Count != json.Count)
+            if (redactSettings.Count != json.Count || (!salts.IsNullOrEmpty() && salts.Count != json.Count))
             {
-                throw new BadRequestException("The corresponding JSON object contains an array that is different in size from the redact settings array. They need to be equaly long.");
+                IDictionary additionalExceptionData = new Dictionary<string, object>
+                    {
+                        { "errorInObject", redactSettings.Count == json.Count ? "json" : "salts" }
+                    };
+
+                throw new BadRequestException("The corresponding JSON or Salt object contains an array that is different in size from the redact settings array. They need to be equaly long.", additionalExceptionData);
             }
 
             // for each element in the array apply the redact function
             for (int i = 0; i < redactSettings.Count; i++)
             {
-                (json[i], salts[i]) = RecursivlyRedactDataAndSalts(json[i], redactSettings[i], salts?[i]);
-            }
-
-            return (json, salts);
-        }
-
-        // the DSL for redacting an array with a command like forEach
-        // is still an early feature and needs more development
-        private (JToken json, JToken salts) RedactArrayWithCommand(JArray json, JObject command, JToken salts = null)
-        {
-            // check that command is object with single command only
-            if(command.Count != 1)
-            {
-                IDictionary additionalExceptionData = new Dictionary<string, object>
+                if(salts.IsNullOrEmpty())
                 {
-                    { "commandObject", command }
-                };
-
-                throw new BadRequestException("A command object can only contain one command element. Please read the manual or contact an admin", additionalExceptionData);
-            }
-
-            if(command.ContainsKey("REDACT:forEach"))
-            {
-                return RedactArrayForEach(json, command["REDACT:forEach"], salts);
-            }
-            // TODO: add new commands
-            // else if() { }
-            else
-            {
-                IDictionary additionalExceptionData = new Dictionary<string, object>
+                    (json[i], _) = RecursivlyRedactDataAndSalts(json[i], redactSettings[i], null);
+                }
+                else
                 {
-                    { "commandObject", command }
-                };
-
-                throw new BadRequestException("You tried to use a redact command. The command you used is not valid. Currently available: 'REDACT:forEach'", additionalExceptionData);
-            }
-        }
-
-        private (JToken json, JToken salts) RedactArrayForEach(JArray json, JToken redactSettings, JToken salts = null)
-        {
-            for (int i = 0; i < json.Count; i++)
-            {
-                (json[i], salts[i]) = RecursivlyRedactDataAndSalts(json[i], redactSettings, salts?[i]);
+                    (json[i], salts[i]) = RecursivlyRedactDataAndSalts(json[i], redactSettings[i], salts[i]);
+                }
             }
 
             return (json, salts);
