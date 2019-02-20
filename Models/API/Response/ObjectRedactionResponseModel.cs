@@ -10,9 +10,7 @@ namespace ObjectHashServer.Models.Api.Response
         public ObjectRedactionResponseModel(ObjectRedaction objectRedaction) : this()
         {
             Data = objectRedaction.RedactedData;
-            // RedactedData = objectRedaction.RedactedData;
             Salts = objectRedaction.RedactedSalts;
-            // RedactedSalts = objectRedaction.RedactedSalts;
             RedactSettings = objectRedaction.RedactSettings;
         }
 

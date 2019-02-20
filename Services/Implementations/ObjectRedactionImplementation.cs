@@ -11,8 +11,8 @@ namespace ObjectHashServer.Services.Implementations
     {
         public (JToken json, JToken salts) RedactJToken(JToken json, JToken redactSettings, JToken salts = null)
         {
-            // deep clone JTokens which are changed
-            return RecursivlyRedactDataAndSalts(json.DeepClone(), redactSettings, salts?.DeepClone());
+            // deep clone JTokens which are changed (json object and salts)
+            return RecursivlyRedactDataAndSalts(json.DeepClone(), redactSettings, salts.IsNullOrEmpty() ? null : salts.DeepClone());
         }
 
         /// <summary>

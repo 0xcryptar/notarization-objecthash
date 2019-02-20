@@ -12,7 +12,7 @@ namespace ObjectHashServer.Services.Implementations
     {
         private static readonly int HASH_ALGORITHM_BLOCK_SIZE = 32;
 
-        public static void SaltsForObjectBaseRequestModel(ObjectBaseRequestModel model)
+        public static void SetRandomSaltsForObjectBaseRequestModel(ObjectBaseRequestModel model)
         {
             if (!model.Salts.IsNullOrEmpty())
             {
