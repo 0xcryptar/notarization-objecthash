@@ -17,7 +17,7 @@ namespace ObjectHashServer.Controllers
             {
                 GenerateSaltsImplementation.SetRandomSaltsForObjectBaseRequestModel(model);
             } 
-            // TODO: the return changes the pure data object
+            // TODO: fix. the return changes the data object
             // eg. if the object contains a float value of 1.0 
             // it is returned as integer
             return new ObjectHashResponseModel(new ObjectHash(model));

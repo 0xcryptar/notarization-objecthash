@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
 using ObjectHashServer.Models.Api.Request;
 using ObjectHashServer.Models.Extensions;
+using ObjectHashServer.Utils;
 
 namespace ObjectHashServer.Services.Implementations
 {
     public class GenerateSaltsImplementation
     {
-        private static readonly int HASH_ALGORITHM_BLOCK_SIZE = 32;
-
         public static void SetRandomSaltsForObjectBaseRequestModel(ObjectBaseRequestModel model)
         {
             if (!model.Salts.IsNullOrEmpty())
@@ -43,7 +40,7 @@ namespace ObjectHashServer.Services.Implementations
                     }
                 case JTokenType.String:
                     {
-                        if(((string)json).StartsWith("**REDACTED**", StringComparison.Ordinal))
+                        if(((string)json).StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD))
                         {
                             return "**REDACTED*";
                         }
@@ -73,9 +70,9 @@ namespace ObjectHashServer.Services.Implementations
         private string GenerateSaltForLeaf()
         {
             Random random = new Random();
-            byte[] buffer = new byte[HASH_ALGORITHM_BLOCK_SIZE];
+            byte[] buffer = new byte[Globals.HASH_ALGORITHM_BLOCK_SIZE];
             random.NextBytes(buffer);
-            return ToHex(buffer);
+            return HexConverter.ToHex(buffer);
         }
 
         private JArray OverrideArrayWithSalts(JArray array)
@@ -98,29 +95,6 @@ namespace ObjectHashServer.Services.Implementations
                 result[o.Key] = value.RecursivlyOverrideJTokenWithSalts(o.Value);
             }
             return result;
-        }
-
-        private static string ToHex(byte[] ba)
-        {
-            StringBuilder hex = new StringBuilder(ba.Length * 2);
-            foreach (byte b in ba)
-            {
-                hex.AppendFormat("{0:x2}", b);
-            }
-            return hex.ToString();
-        }
-
-        private static byte[] HashFromHex(string hash)
-        {
-            if (hash.Length != (HASH_ALGORITHM_BLOCK_SIZE * 2) || !System.Text.RegularExpressions.Regex.IsMatch(hash, @"\A\b[0-9a-fA-F]+\b\Z"))
-            {
-                throw new BadRequestException($"The provided salt has an invaid length ({HASH_ALGORITHM_BLOCK_SIZE * 2} characters, hex only)");
-            }
-
-            return Enumerable.Range(0, hash.Length)
-                 .Where(x => x % 2 == 0)
-                 .Select(x => Convert.ToByte(hash.Substring(x, 2), 16))
-                 .ToArray();
         }
     }
 }

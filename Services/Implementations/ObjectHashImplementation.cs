@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -6,6 +8,7 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
 using ObjectHashServer.Models.Extensions;
+using ObjectHashServer.Utils;
 
 namespace ObjectHashServer.Services.Implementations
 {
@@ -16,20 +19,14 @@ namespace ObjectHashServer.Services.Implementations
     /// </summary>
     public class ObjectHashImplementation
     {
-        private static readonly bool SORT_ARRAY = false;
-        private static readonly string HASH_ALGORITHM = "SHA-256";
-        private static readonly int HASH_ALGORITHM_BLOCK_SIZE = 32;
-        private static readonly StringComparison STRING_COMPARE_METHOD = StringComparison.Ordinal;
-        private static readonly NormalizationForm STRING_NORMALIZATION = NormalizationForm.FormC;
-
         public byte[] Hash { get; private set; }
         private HashAlgorithm digester;
         private MemoryStream memoryStream;
 
         public ObjectHashImplementation()
         {
-            Hash = new byte[HASH_ALGORITHM_BLOCK_SIZE];
-            digester = HashAlgorithm.Create(HASH_ALGORITHM);
+            Hash = new byte[Globals.HASH_ALGORITHM_BLOCK_SIZE];
+            digester = HashAlgorithm.Create(Globals.HASH_ALGORITHM);
             memoryStream = new MemoryStream();
         }
 
@@ -43,12 +40,25 @@ namespace ObjectHashServer.Services.Implementations
             {
                 case JTokenType.Array:
                     {
-                        HashArray((JArray)json, salts.IsNullOrEmpty() ? null : (JArray)salts);
+                        try
+                        {
+                            HashArray((JArray)json, salts.IsNullOrEmpty() ? null : (JArray)salts);
+                        } catch (InvalidCastException)
+                        {
+                            throw new BadRequestException("The provided Salt does not match the JSON object. An array => [] is expected but the Salt data is not of type array");
+                        }
                         break;
                     }
                 case JTokenType.Object:
                     {
-                        HashObject((JObject)json, salts.IsNullOrEmpty() ? null : (JObject)salts);
+                        try
+                        {
+                            HashObject((JObject)json, salts.IsNullOrEmpty() ? null : (JObject)salts);
+                        }
+                        catch (InvalidCastException)
+                        {
+                            throw new BadRequestException("The provided Salt does not match the JSON object. An object => {} is expected but the Salt data is not of type object");
+                        }
                         break;
                     }
                 case JTokenType.Integer:
@@ -100,6 +110,9 @@ namespace ObjectHashServer.Services.Implementations
 
         private void AddTaggedByteArray(char tag, byte[] byteArray, JToken salt = null)
         {
+            // copying of byteArrays is quite ugly
+            // but there is no nicer way in C# to 
+            // join two byte arrays
             byte[] tempHash;
             byte[] merged = new byte[byteArray.Length + 1];
             byteArray.CopyTo(merged, 1);
@@ -108,16 +121,17 @@ namespace ObjectHashServer.Services.Implementations
 
             if (salt != null)
             {
-                try
-                {
-                    byte[][] hashList = new byte[2][];
-                    hashList[0] = HashFromHex((string)salt);
-                    hashList[1] = tempHash;
+                // validate the salt is hex and block size long
+                HexConverter.ValidateStringIsHexAndBlockLength(salt);
+                // hash salt to equaly distribut randomness
+                ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
+                jKeyHash.HashString((string)salt);
+                // merge salt and object hash as list
+                byte[][] hashList = new byte[2][];
+                hashList[0] = jKeyHash.Hash;
+                hashList[1] = tempHash;
 
-                    HashListOfHashes(hashList, 'l', false);
-                } catch(InvalidCastException) {
-                    throw new BadRequestException("The provided Salt object does not match the provided JSON object. Please check that the keys in the Salt and the JSON object are equal.");
-                }
+                HashListOfHashes(hashList, 'l', false);
             }
             else
             {
@@ -132,13 +146,13 @@ namespace ObjectHashServer.Services.Implementations
 
         private void HashString(string str, JToken salt = null)
         {
-            if (str.StartsWith("**REDACTED**", STRING_COMPARE_METHOD) && str.Length == 76)
+            if (str.StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) && str.Length == 76)
             {
-                Hash = HashFromHex(str.Substring(12, str.Length - 12));
+                Hash = HexConverter.HashFromHex(str.Substring(12, str.Length - 12));
             }
             else
             {
-                AddTaggedString('u', str.Normalize(STRING_NORMALIZATION), salt);
+                AddTaggedString('u', str.Normalize(Globals.STRING_NORMALIZATION), salt);
             }
         }
 
@@ -170,22 +184,27 @@ namespace ObjectHashServer.Services.Implementations
 
         private void HashBytes(byte[] bs, JToken salt = null)
         {
-            // TODO: think about if 'l' is a good tag
+            // TODO: check if 'l' is a good tag
             AddTaggedByteArray('l', bs, salt);
         }
 
         private void HashArray(JArray array, JArray salts = null)
         {
+            if (!salts.IsNullOrEmpty() && salts.Count != array.Count)
+            {
+                throw new BadRequestException("The corresponding JSON object contains an array that is different in size from the Salts array. They need to be equaly long.");
+            }
+
             byte[][] hashList = new byte[array.Count][];
             for (int i = 0; i < array.Count; i++)
             {
                 ObjectHashImplementation aElementHash = new ObjectHashImplementation();
-                aElementHash.HashJToken(array[i], salts != null && salts.Count > i ? salts[i] : null);
+                aElementHash.HashJToken(array[i], salts.IsNullOrEmpty() ? null : salts[i]);
                 hashList[i] = aElementHash.Hash;
             }
 
             // sorting arrays can be needed, but the default should be not to sort arrays
-            HashListOfHashes(hashList, 'l', SORT_ARRAY);
+            HashListOfHashes(hashList, 'l', Globals.SORT_ARRAY);
         }
 
         private void HashObject(JObject obj, JObject salts = null)
@@ -195,14 +214,27 @@ namespace ObjectHashServer.Services.Implementations
 
             foreach (var o in obj)
             {
+                if (!salts.IsNullOrEmpty() && !salts.ContainsKey(o.Key))
+                {
+                    IDictionary additionalExceptionData = new Dictionary<string, object>
+                        {
+                            { "missingKey", o.Key }
+                        };
+
+                    throw new BadRequestException("The provided JSON defines an object which is different from the Salts object. Please check the JSON or the salt data.", additionalExceptionData);
+                }
+
                 ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
-                // TODO: check if acceptable
-                // object keys are not salted, i dont see a big issue for that
-                // jKeyHash.HashString(salts.Key + o.Key);
                 jKeyHash.HashString(o.Key);
+                // TODO: check if acceptable
+                // object keys are not salted, i don't see a big issue
+                // alternative would be
+                // jKeyHash.HashString(SALT + o.Key);
+                // but its quite difficult for an user to 
+                // store the salts for object keys
 
                 ObjectHashImplementation jValHash = new ObjectHashImplementation();
-                jValHash.HashJToken(o.Value, salts != null && salts.ContainsKey(o.Key) ? salts[o.Key] : null);
+                jValHash.HashJToken(o.Value, salts.IsNullOrEmpty() ? null : salts[o.Key]);
 
                 // merge both hashes (of key and value)
                 hashList[i] = jKeyHash.Hash.Concat(jValHash.Hash).ToArray();
@@ -218,7 +250,7 @@ namespace ObjectHashServer.Services.Implementations
             // sorting, if wanted
             if (sortArray)
             {
-                Array.Sort(hashList, (x, y) => string.Compare(ToHex(x), ToHex(y), STRING_COMPARE_METHOD));
+                Array.Sort(hashList, (x, y) => string.Compare(HexConverter.ToHex(x), HexConverter.ToHex(y), Globals.STRING_COMPARE_METHOD));
             }
 
             memoryStream.Flush();
@@ -232,46 +264,22 @@ namespace ObjectHashServer.Services.Implementations
 
         private string DebugString()
         {
-            return ToHex(memoryStream.ToArray());
+            return HexConverter.ToHex(memoryStream.ToArray());
         }
 
         public override string ToString()
         {
-            // return the hex representation of the current memory stream
             return DebugString();
         }
 
         public int CompareTo(ObjectHashImplementation other)
         {
-            return string.Compare(HashAsString(), other.HashAsString(), STRING_COMPARE_METHOD);
+            return string.Compare(HashAsString(), other.HashAsString(), Globals.STRING_COMPARE_METHOD);
         }
 
         public string HashAsString()
         {
-            return ToHex(Hash);
-        }
-
-        private static string ToHex(byte[] ba)
-        {
-            StringBuilder hex = new StringBuilder(ba.Length * 2);
-            foreach (byte b in ba)
-            {
-                hex.AppendFormat("{0:x2}", b);
-            }
-            return hex.ToString();
-        }
-
-        private static byte[] HashFromHex(string hash)
-        {
-            if (hash.Length != (HASH_ALGORITHM_BLOCK_SIZE * 2) || !System.Text.RegularExpressions.Regex.IsMatch(hash, @"\A\b[0-9a-fA-F]+\b\Z"))
-            {
-                throw new BadRequestException($"The provided hash or salt is not a valid {HASH_ALGORITHM} ({HASH_ALGORITHM_BLOCK_SIZE * 2} characters, hex only)");
-            }
-
-            return Enumerable.Range(0, hash.Length)
-                 .Where(x => x % 2 == 0)
-                 .Select(x => Convert.ToByte(hash.Substring(x, 2), 16))
-                 .ToArray();
+            return HexConverter.ToHex(Hash);
         }
 
         /// <summary>
