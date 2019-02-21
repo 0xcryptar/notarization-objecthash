@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
 
 namespace ObjectHashServer.Utils
@@ -26,7 +27,7 @@ namespace ObjectHashServer.Utils
                  .ToArray();
         }
 
-        public static void ValidateStringIsHexAndBlockLength(object objectVal)
+        public static void ValidateStringIsHexAndBlockLength(JToken objectVal)
         {
             string hash;
             try

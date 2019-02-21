@@ -51,6 +51,11 @@ namespace ObjectHashServer.Services.Implementations
                     {
                         throw new BadRequestException("The provided JSON does not contain an array -> [] where the redact settings require one. Please check the JSON data or the redact settings", e);
                     }
+                case JTokenType.None:
+                case JTokenType.Null:
+                    {
+                        return (json, salts);
+                    }
                 default:
                     throw new BadRequestException("The redact setting JSON is invalid. It can only contain a nested JSON, arrays and the data type Boolean.");
             }
