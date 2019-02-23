@@ -15,20 +15,14 @@ namespace ObjectHashServer.Models
         public JToken Data { get; set; }
         public JToken Salts { get; set; }
 
-        // TODO: optimize
-        private string hash;
         public string Hash
         {
-            get { UpdateHash(); return hash; }
-            private set { hash = value; }
-        }
-
-        private void UpdateHash()
-        {
-            // calculate hash
-            ObjectHashImplementation h = new ObjectHashImplementation();
-            h.HashJToken(Data, Salts);
-            Hash = h.HashAsString();
+            get
+            {
+                ObjectHashImplementation h = new ObjectHashImplementation();
+                h.HashJToken(Data, Salts);
+                return h.HashAsString();
+            }
         }
     }
 }

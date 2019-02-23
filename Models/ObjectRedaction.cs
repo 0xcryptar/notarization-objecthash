@@ -17,24 +17,24 @@ namespace ObjectHashServer.Models
         public JToken Salts { get; set; }
         public JToken RedactSettings { get; set; }
 
-        // TODO: optimize
-        private JToken redactedData;
         public JToken RedactedData
         {
-            get { UpdateRedactedData(); return redactedData; }
-            private set { redactedData = value; }
-        }
-        private JToken redactedSalts;
-        public JToken RedactedSalts
-        {
-            get { UpdateRedactedData(); return redactedSalts; }
-            private set { redactedSalts = value; }
+            get
+            {
+                ObjectRedactionImplementation r = new ObjectRedactionImplementation();
+                (JToken redactedData, _) = r.RedactJToken(Data, RedactSettings, Salts);
+                return redactedData;
+            }
         }
 
-        private void UpdateRedactedData()
+        public JToken RedactedSalts
         {
-            ObjectRedactionImplementation r = new ObjectRedactionImplementation();
-            (RedactedData, RedactedSalts) = r.RedactJToken(Data, RedactSettings, Salts);
+            get
+            {
+                ObjectRedactionImplementation r = new ObjectRedactionImplementation();
+                (_, JToken redactedSalts) = r.RedactJToken(Data, RedactSettings, Salts);
+                return redactedSalts;
+            }
         }
     }
 }

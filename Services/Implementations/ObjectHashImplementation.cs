@@ -87,8 +87,15 @@ namespace ObjectHashServer.Services.Implementations
                     }
                 case JTokenType.Float:
                     {
-                        // TODO: check if not to use float instead of double
-                        HashDouble((double)json, salts);
+                        // TODO: resolve
+                        // https://github.com/benlaurie/objecthash/issues/52
+                        if ((double)json % 1.0 == 0.0 && (double)json != 0.0)
+                        {
+                            HashLong((long)json, salts);
+                        } else
+                        {
+                            HashDouble((double)json, salts);
+                        }
                         break;
                     }
                 case JTokenType.Bytes:
