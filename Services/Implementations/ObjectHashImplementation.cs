@@ -61,11 +61,6 @@ namespace ObjectHashServer.Services.Implementations
                         }
                         break;
                     }
-                case JTokenType.Integer:
-                    {
-                        HashLong((long)json, salts);
-                        break;
-                    }
                 case JTokenType.String:
                 case JTokenType.TimeSpan:
                 case JTokenType.Guid:
@@ -85,17 +80,21 @@ namespace ObjectHashServer.Services.Implementations
                         HashBoolean((bool)json, salts);
                         break;
                     }
-                case JTokenType.Float:
+                case JTokenType.Integer:
                     {
-                        // TODO: resolve
-                        // https://github.com/benlaurie/objecthash/issues/52
-                        if ((double)json % 1.0 == 0.0 && (double)json != 0.0)
-                        {
-                            HashLong((long)json, salts);
-                        } else
+                        if (Globals.COMMON_JSONIFY)
                         {
                             HashDouble((double)json, salts);
                         }
+                        else
+                        {
+                            HashLong((long)json, salts);
+                        }
+                        break;
+                    }
+                case JTokenType.Float:
+                    {
+                        HashDouble((double)json, salts);
                         break;
                     }
                 case JTokenType.Bytes:
