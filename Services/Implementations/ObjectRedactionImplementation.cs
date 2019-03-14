@@ -165,7 +165,7 @@ namespace ObjectHashServer.Services.Implementations
                 }
                 else
                 {
-                    (json[i], salts[i]) = RecursivlyRedactDataAndSalts(json[i], command["REDACT:forEach"], salts);
+                    (json[i], salts[i]) = RecursivlyRedactDataAndSalts(json[i], command["REDACT:forEach"], salts[i]);
 
                 }
             }
