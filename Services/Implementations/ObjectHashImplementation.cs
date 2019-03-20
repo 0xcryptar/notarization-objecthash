@@ -9,31 +9,34 @@ using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
 using ObjectHashServer.Models.Extensions;
 using ObjectHashServer.Utils;
+// ReSharper disable PossibleNullReferenceException
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace ObjectHashServer.Services.Implementations
 {
     /// <summary>
-    /// This is the C# implementation of the ObjectHash libaray from Ben Laurie. 
+    /// This is the C# implementation of the ObjectHash library from Ben Laurie. 
     /// The source code of may other implementations can be found here: 
     /// https://github.com/benlaurie/objecthash
     /// </summary>
     public class ObjectHashImplementation
     {
-        public byte[] Hash { get; private set; }
-        private HashAlgorithm digester;
-        private MemoryStream memoryStream;
+        private byte[] Hash { get; set; }
+        private readonly HashAlgorithm _digester;
+        private readonly MemoryStream _memoryStream;
 
         public ObjectHashImplementation()
         {
             Hash = new byte[Globals.HASH_ALGORITHM_BLOCK_SIZE];
-            digester = HashAlgorithm.Create(Globals.HASH_ALGORITHM);
-            memoryStream = new MemoryStream();
+            _digester = HashAlgorithm.Create(Globals.HASH_ALGORITHM);
+            _memoryStream = new MemoryStream();
         }
 
         /// <summary>
-        /// Add any data to the hash calcualtion of the ObjectHashImplementation object.
+        /// Add any data to the hash calculation of the ObjectHashImplementation object.
         /// </summary>
         /// <param name="json">Any valid (RFC 7159 and ECMA-404) JSON data as JToken</param>
+        /// <param name="salts">Salts fitting to the JSON object.</param>
         public void HashJToken(JToken json, JToken salts = null)
         {
             switch (json.Type)
@@ -116,20 +119,17 @@ namespace ObjectHashServer.Services.Implementations
 
         private void AddTaggedByteArray(char tag, byte[] byteArray, JToken salt = null)
         {
-            // copying of byteArrays is quite ugly
-            // but there is no nicer way in C# to 
-            // join two byte arrays
-            byte[] tempHash;
+            // copying of byteArrays is quite ugly but there is no nicer way in C# to join two byte arrays
             byte[] merged = new byte[byteArray.Length + 1];
             byteArray.CopyTo(merged, 1);
             merged[0] = (byte)tag;
-            tempHash = digester.ComputeHash(merged);
+            byte[] tempHash = _digester.ComputeHash(merged);
 
             if (salt != null)
             {
                 // validate the salt is hex and block size long
                 HexConverter.ValidateStringIsHexAndBlockLength(salt);
-                // hash salt to equaly distribut randomness
+                // hash salt to equally distribute randomness
                 ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
                 jKeyHash.HashString((string)salt);
                 // merge salt and object hash as list
@@ -137,7 +137,7 @@ namespace ObjectHashServer.Services.Implementations
                 hashList[0] = jKeyHash.Hash;
                 hashList[1] = tempHash;
 
-                HashListOfHashes(hashList, 'l', false);
+                HashListOfHashes(hashList, 'l');
             }
             else
             {
@@ -198,7 +198,7 @@ namespace ObjectHashServer.Services.Implementations
         {
             if (!salts.IsNullOrEmpty() && salts.Count != array.Count)
             {
-                throw new BadRequestException("The corresponding JSON object contains an array that is different in size from the Salts array. They need to be equaly long.");
+                throw new BadRequestException("The corresponding JSON object contains an array that is different in size from the Salts array. They need to be equally long.");
             }
 
             byte[][] hashList = new byte[array.Count][];
@@ -218,29 +218,25 @@ namespace ObjectHashServer.Services.Implementations
             byte[][] hashList = new byte[obj.Count][];
             int i = 0;
 
-            foreach (var o in obj)
+            foreach ((string key, JToken value) in obj)
             {
-                if (!salts.IsNullOrEmpty() && !salts.ContainsKey(o.Key))
+                if (!salts.IsNullOrEmpty() && !salts.ContainsKey(key))
                 {
                     IDictionary additionalExceptionData = new Dictionary<string, object>
                         {
-                            { "missingKey", o.Key }
+                            { "missingKey", key }
                         };
 
                     throw new BadRequestException("The provided JSON defines an object which is different from the Salts object. Please check the JSON or the salt data.", additionalExceptionData);
                 }
 
                 ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
-                jKeyHash.HashString(o.Key);
+                jKeyHash.HashString(key);
                 // TODO: check if acceptable
-                // object keys are not salted, i don't see a big issue
-                // alternative would be
-                // jKeyHash.HashString(SALT + o.Key);
-                // but its quite difficult for an user to 
-                // store the salts for object keys
+                // object keys are not salted, i don't see a big issue alternative would be jKeyHash.HashString(SALT + o.Key); but its quite difficult for an user to store the salts for object keys
 
                 ObjectHashImplementation jValHash = new ObjectHashImplementation();
-                jValHash.HashJToken(o.Value, salts.IsNullOrEmpty() ? null : salts[o.Key]);
+                jValHash.HashJToken(value, salts.IsNullOrEmpty() ? null : salts[key]);
 
                 // merge both hashes (of key and value)
                 hashList[i] = jKeyHash.Hash.Concat(jValHash.Hash).ToArray();
@@ -259,18 +255,18 @@ namespace ObjectHashServer.Services.Implementations
                 Array.Sort(hashList, (x, y) => string.Compare(HexConverter.ToHex(x), HexConverter.ToHex(y), Globals.STRING_COMPARE_METHOD));
             }
 
-            memoryStream.Flush();
-            memoryStream.WriteByte((byte)type);
+            _memoryStream.Flush();
+            _memoryStream.WriteByte((byte)type);
             for (int i = 0; i < hashList.GetLength(0); i++)
             {
-                memoryStream.Write(hashList[i]);
+                _memoryStream.Write(hashList[i]);
             }
-            Hash = digester.ComputeHash(memoryStream.ToArray());
+            Hash = _digester.ComputeHash(_memoryStream.ToArray());
         }
 
         private string DebugString()
         {
-            return HexConverter.ToHex(memoryStream.ToArray());
+            return HexConverter.ToHex(_memoryStream.ToArray());
         }
 
         public override string ToString()
@@ -278,6 +274,7 @@ namespace ObjectHashServer.Services.Implementations
             return DebugString();
         }
 
+        // ReSharper disable once UnusedMember.Global
         public int CompareTo(ObjectHashImplementation other)
         {
             return string.Compare(HashAsString(), other.HashAsString(), Globals.STRING_COMPARE_METHOD);
@@ -289,23 +286,38 @@ namespace ObjectHashServer.Services.Implementations
         }
 
         /// <summary>
-        /// Normalizes a float/double. This function was taken from benlaurie/objecthash
+        /// Normalizes a float/double. This function was taken from
+        /// https://github.com/benlaurie/objecthash
         /// </summary>
         /// <returns>String of the normalized double</returns>
         /// <param name="d">Input value</param>
         #pragma warning disable RECS0018 // Comparison of floating point numbers with equality operator
         private static string NormalizeDouble(double d)
         {
-            // Early out for zero. No epsilon diff check wanted.
+            // Early outs for special cases like NaN, +/- infinity or equality to 0
+            if (double.IsNaN(d))
+            {
+                return "NaN";
+            } 
+            
+            if (double.IsPositiveInfinity(d))
+            {
+                return "Infinity";
+            }
+            
+            if(double.IsNegativeInfinity(d)) {
+                return "-Infinity";
+            }
+            
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (d == 0.0)
             {
                 return "+0:";
             }
+            
             StringBuilder sb = new StringBuilder();
-            // Sign
             sb.Append(d < 0.0 ? '-' : '+');
             if (d < 0.0) d = -d;
-            // Exponent
             int e = 0;
             while (d > 1)
             {
@@ -319,11 +331,13 @@ namespace ObjectHashServer.Services.Implementations
             }
             sb.Append(e);
             sb.Append(':');
-            // Mantissa
+
             if (d > 1 || d <= 0.5)
             {
                 throw new Exception("wrong range for mantissa");
             }
+            
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             while (d != 0)
             {
                 if (d >= 1)

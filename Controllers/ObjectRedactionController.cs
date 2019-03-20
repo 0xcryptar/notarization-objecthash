@@ -2,7 +2,6 @@
 using ObjectHashServer.Models;
 using ObjectHashServer.Models.Api.Request;
 using ObjectHashServer.Models.Api.Response;
-using ObjectHashServer.Services.Implementations;
 
 namespace ObjectHashServer.Controllers
 {

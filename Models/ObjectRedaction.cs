@@ -13,9 +13,9 @@ namespace ObjectHashServer.Models
             RedactSettings = model.RedactSettings;
         }
 
-        public JToken Data { get; set; }
-        public JToken Salts { get; set; }
-        public JToken RedactSettings { get; set; }
+        private JToken Data { get; }
+        private JToken Salts { get; }
+        public JToken RedactSettings { get; }
 
         public JToken RedactedData
         {

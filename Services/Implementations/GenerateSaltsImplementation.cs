@@ -7,7 +7,7 @@ using ObjectHashServer.Utils;
 
 namespace ObjectHashServer.Services.Implementations
 {
-    public class GenerateSaltsImplementation
+    public static class GenerateSaltsImplementation
     {
         public static void SetRandomSaltsForObjectBaseRequestModel(ObjectBaseRequestModel model)
         {
@@ -16,17 +16,16 @@ namespace ObjectHashServer.Services.Implementations
                 throw new BadRequestException("You want to generate new salts but you send salts with the request. Please either generate new salts or send them with the request.");
             }
 
-            GenerateSaltsImplementation gsi = new GenerateSaltsImplementation();
-            model.Salts = gsi.SaltsForJToken(model.Data);
+            model.Salts = SaltsForJToken(model.Data);
         }
 
-        public JToken SaltsForJToken(JToken json)
+        private static JToken SaltsForJToken(JToken json)
         {
             JToken jsonClone = json.DeepClone();
-            return RecursivlyOverrideJTokenWithSalts(jsonClone);
+            return RecursivelyOverrideJTokenWithSalts(jsonClone);
         }
 
-        private JToken RecursivlyOverrideJTokenWithSalts(JToken json)
+        private static JToken RecursivelyOverrideJTokenWithSalts(JToken json)
         {
             switch (json.Type)
             {
@@ -39,14 +38,9 @@ namespace ObjectHashServer.Services.Implementations
                         return OverrideObjectWithSalts((JObject)json);
                     }
                 case JTokenType.String:
-                    {
-                        if(((string)json).StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD))
-                        {
-                            return "**REDACTED*";
-                        }
-
-                        return GenerateSaltForLeaf();
-                    }
+                {
+                    return ((string)json).StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) ? "**REDACTED*" : GenerateSaltForLeaf();
+                }
                 case JTokenType.Integer:
                 case JTokenType.TimeSpan:
                 case JTokenType.Guid:
@@ -67,7 +61,8 @@ namespace ObjectHashServer.Services.Implementations
             }
         }
 
-        private string GenerateSaltForLeaf()
+        // static methods //
+        private static string GenerateSaltForLeaf()
         {
             Random random = new Random();
             byte[] buffer = new byte[Globals.HASH_ALGORITHM_BLOCK_SIZE];
@@ -75,24 +70,22 @@ namespace ObjectHashServer.Services.Implementations
             return HexConverter.ToHex(buffer);
         }
 
-        private JArray OverrideArrayWithSalts(JArray array)
+        private static JArray OverrideArrayWithSalts(JArray array)
         {
             JArray result = new JArray();
-            for (int i = 0; i < array.Count; i++)
+            foreach (JToken jToken in array)
             {
-                GenerateSaltsImplementation element = new GenerateSaltsImplementation();
-                result.Add(element.RecursivlyOverrideJTokenWithSalts(array[i]));
+                result.Add(RecursivelyOverrideJTokenWithSalts(jToken));
             }
             return result;
         }
 
-        private JObject OverrideObjectWithSalts(JObject obj)
+        private static JObject OverrideObjectWithSalts(JObject obj)
         {
             JObject result = new JObject();
-            foreach (var o in obj)
+            foreach ((string key, JToken jToken) in obj)
             {
-                GenerateSaltsImplementation value = new GenerateSaltsImplementation();
-                result[o.Key] = value.RecursivlyOverrideJTokenWithSalts(o.Value);
+                result[key] = RecursivelyOverrideJTokenWithSalts(jToken);
             }
             return result;
         }

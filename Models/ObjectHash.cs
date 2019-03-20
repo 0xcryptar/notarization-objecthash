@@ -6,14 +6,14 @@ namespace ObjectHashServer.Models
 {
     public class ObjectHash
     {
-        public ObjectHash(ObjectHashRequestModel model)
+        public ObjectHash(ObjectBaseRequestModel model)
         {
             Data = model.Data;
             Salts = model.Salts;
         }
 
-        public JToken Data { get; set; }
-        public JToken Salts { get; set; }
+        public JToken Data { get; }
+        public JToken Salts { get; }
 
         public string Hash
         {

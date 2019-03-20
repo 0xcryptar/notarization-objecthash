@@ -5,6 +5,8 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.Exceptions;
 using ObjectHashServer.Models.Extensions;
+// ReSharper disable SuggestBaseTypeForParameter
+// ReSharper disable PossibleNullReferenceException
 
 namespace ObjectHashServer.Services.Implementations
 {
@@ -13,7 +15,7 @@ namespace ObjectHashServer.Services.Implementations
         public (JToken json, JToken salts) RedactJToken(JToken json, JToken redactSettings, JToken salts = null)
         {
             // deep clone JTokens which are changed (json object and salts)
-            return RecursivlyRedactDataAndSalts(json.DeepClone(), redactSettings, salts.IsNullOrEmpty() ? null : salts.DeepClone());
+            return RecursiveRedactDataAndSalts(json.DeepClone(), redactSettings, salts.IsNullOrEmpty() ? null : salts.DeepClone());
         }
 
         /// <summary>
@@ -22,19 +24,17 @@ namespace ObjectHashServer.Services.Implementations
         /// values it can ONLY contain Booleans. For each value 'true' in the redact 
         /// settings the counterpart in the JSON will be blacked out.
         /// </summary>
-        private (JToken json, JToken salts) RecursivlyRedactDataAndSalts(JToken json, JToken redactSettings, JToken salts = null)
+        private (JToken json, JToken salts) RecursiveRedactDataAndSalts(JToken json, JToken redactSettings, JToken salts = null)
         {
+            // ReSharper disable once SwitchStatementMissingSomeCases
             switch (redactSettings.Type)
             {
                 case JTokenType.Boolean:
-                    if ((bool)redactSettings)
-                    {
-                        ObjectHashImplementation objectHash = new ObjectHashImplementation();
-                        objectHash.HashJToken(json, salts);
-                        return ("**REDACTED**" + objectHash.HashAsString(), "**REDACTED**");
-                    }
-
-                    return (json, salts);
+                    if (!(bool) redactSettings) return (json, salts);
+                    
+                    ObjectHashImplementation objectHash = new ObjectHashImplementation();
+                    objectHash.HashJToken(json, salts);
+                    return ("**REDACTED**" + objectHash.HashAsString(), "**REDACTED**");
                 case JTokenType.Object:
                     try
                     {
@@ -71,14 +71,14 @@ namespace ObjectHashServer.Services.Implementations
 
         private (JToken json, JToken salts) RedactObject(JObject json, JObject redactSettings, JObject salts = null)
         {
-            foreach (var redactSetting in redactSettings)
+            foreach ((string key, JToken _) in redactSettings)
             {
-                if (!json.ContainsKey(redactSetting.Key) || (!salts.IsNullOrEmpty() && !salts.ContainsKey(redactSetting.Key)))
+                if (!json.ContainsKey(key) || (!salts.IsNullOrEmpty() && !salts.ContainsKey(key)))
                 {
                     IDictionary additionalExceptionData = new Dictionary<string, object>
                         {
-                            { "missingKey", redactSetting.Key },
-                            { "errorInObject", !json.ContainsKey(redactSetting.Key) ? "json" : "salts" }
+                            { "missingKey", key },
+                            { "errorInObject", !json.ContainsKey(key) ? "json" : "salts" }
                         };
 
                     throw new BadRequestException("The provided JSON or Salt defines an object which is different from the redact settings object. Please check the JSON, the salt data or the redact settings.", additionalExceptionData);
@@ -86,17 +86,16 @@ namespace ObjectHashServer.Services.Implementations
 
                 if(salts.IsNullOrEmpty())
                 {
-                    (json[redactSetting.Key], _) = RecursivlyRedactDataAndSalts(json[redactSetting.Key], redactSettings[redactSetting.Key], null);
+                    (json[key], _) = RecursiveRedactDataAndSalts(json[key], redactSettings[key]);
                 }
                 else
                 {
-                    (json[redactSetting.Key], salts[redactSetting.Key]) = RecursivlyRedactDataAndSalts(json[redactSetting.Key], redactSettings[redactSetting.Key], salts[redactSetting.Key]);
+                    (json[key], salts[key]) = RecursiveRedactDataAndSalts(json[key], redactSettings[key], salts[key]);
                 }
             }
 
             return (json, salts);
         }
-
         private (JToken json, JToken salts) RedactArray(JArray json, JArray redactSettings, JArray salts = null)
         {
             if (redactSettings.Count != json.Count || (!salts.IsNullOrEmpty() && salts.Count != json.Count))
@@ -106,7 +105,7 @@ namespace ObjectHashServer.Services.Implementations
                         { "errorInObject", redactSettings.Count == json.Count ? "json" : "salts" }
                     };
 
-                throw new BadRequestException("The corresponding JSON or Salt object contains an array that is different in size from the redact settings array. They need to be equaly long.", additionalExceptionData);
+                throw new BadRequestException("The corresponding JSON or Salt object contains an array that is different in size from the redact settings array. They need to be equally long.", additionalExceptionData);
             }
 
             // for each element in the array apply the redact function
@@ -114,11 +113,11 @@ namespace ObjectHashServer.Services.Implementations
             {
                 if(salts.IsNullOrEmpty())
                 {
-                    (json[i], _) = RecursivlyRedactDataAndSalts(json[i], redactSettings[i], null);
+                    (json[i], _) = RecursiveRedactDataAndSalts(json[i], redactSettings[i]);
                 }
                 else
                 {
-                    (json[i], salts[i]) = RecursivlyRedactDataAndSalts(json[i], redactSettings[i], salts[i]);
+                    (json[i], salts[i]) = RecursiveRedactDataAndSalts(json[i], redactSettings[i], salts[i]);
                 }
             }
 
@@ -161,11 +160,11 @@ namespace ObjectHashServer.Services.Implementations
             {
                 if(salts.IsNullOrEmpty())
                 {
-                    (json[i], _) = RecursivlyRedactDataAndSalts(json[i], command["REDACT:forEach"], null);
+                    (json[i], _) = RecursiveRedactDataAndSalts(json[i], command["REDACT:forEach"]);
                 }
                 else
                 {
-                    (json[i], salts[i]) = RecursivlyRedactDataAndSalts(json[i], command["REDACT:forEach"], salts[i]);
+                    (json[i], salts[i]) = RecursiveRedactDataAndSalts(json[i], command["REDACT:forEach"], salts[i]);
 
                 }
             }
@@ -184,15 +183,15 @@ namespace ObjectHashServer.Services.Implementations
         {
             JObject obj = (JObject)command["REDACT:ifObjectContains"];
 
-            foreach (var o in obj)
+            foreach ((string key, JToken _) in obj)
             {
-                if (!json.ContainsKey(o.Key) || !JToken.DeepEquals(json[o.Key], obj[o.Key]))
+                if (!json.ContainsKey(key) || !JToken.DeepEquals(json[key], obj[key]))
                 {
                     return (json, salts);
                 }
             }
 
-            return RecursivlyRedactDataAndSalts(json, true, salts);
+            return RecursiveRedactDataAndSalts(json, true, salts);
         }
     }
 }

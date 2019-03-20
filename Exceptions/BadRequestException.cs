@@ -8,7 +8,7 @@ namespace ObjectHashServer.Exceptions
         public BadRequestException() : base("Bad Request (400)") { }
         public BadRequestException(string message) : base(message) { }
         public BadRequestException(string message, Exception exception) : base(message, exception) { }
-        public BadRequestException(string message, IDictionary dictonary) : base(message, dictonary) { }
-        public BadRequestException(string message, IDictionary dictonary, Exception exception) : base(message, dictonary, exception) { }
+        public BadRequestException(string message, IEnumerable dictionary) : base(message, dictionary) { }
+        public BadRequestException(string message, IEnumerable dictionary, Exception exception) : base(message, dictionary, exception) { }
     }
 }

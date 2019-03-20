@@ -5,20 +5,20 @@ namespace ObjectHashServer.Exceptions
 {
     public class BaseException : Exception
     {
-        public BaseException(string message, Exception innerException = null)
+        protected BaseException(string message, Exception innerException = null)
            : base(message, innerException)
         {
             if(innerException != null)
                 base.Data.Add("innerException", innerException);
         }
 
-        public BaseException(string message, IDictionary additionalData)
+        protected BaseException(string message, IEnumerable additionalData)
             : base(message)
         {
             base.Data.Add("additionalData", additionalData);
         }
 
-        public BaseException(string message, IDictionary additionalData, Exception innerException = null)
+        protected BaseException(string message, IEnumerable additionalData, Exception innerException = null)
             : base(message, innerException)
         {
             base.Data.Add("additionalData", additionalData);
