@@ -15,37 +15,52 @@ namespace ObjectHashServer.Services.Implementations
         /// Result is a redact setting containing only booleans.
         /// This method does change the provided inputs. So there is no need to clone
         /// them before calling this method.
-        /// Not deep fct only only provided level!!!
         /// </summary>
         /// <returns>The fully evaluated redact settings object so that all JSON leaves only contain a boolean</returns>
         public static JToken EvaluateCommandsInRedactSettings(JToken redactSettings, JToken json)
         {
-            return IsCommand(redactSettings) ? RecursiveEvaluateCommandsInRedactSettings((JObject)redactSettings.DeepClone(), json.DeepClone()) : redactSettings;
+            return RecursiveEvaluateCommandsInRedactSettings(redactSettings.DeepClone(), json.DeepClone());
         }
-
-        private static bool IsCommand(JToken redactSettings)
+        
+        private static JToken RecursiveEvaluateCommandsInRedactSettings(JToken redactSettings, JToken json)
         {
-            // check for a valid command
-            // a valid REDACT DSL command is an JObject with exactly one element where the key starts with "REDACT"
-            if (redactSettings.Type != JTokenType.Object) return false;
-            List<string> objectKeys = ((JObject)redactSettings).Properties().Select(p => p.Name).ToList();
-            return objectKeys.Count != 1 || !objectKeys[0].StartsWith("REDACT", Globals.STRING_COMPARE_METHOD);
-        }
-
-        private static JToken RecursiveEvaluateCommandsInRedactSettings(JObject redactSettings, JToken json)
-        {
-            if (!IsCommand(redactSettings))
+            switch (redactSettings.Type)
             {
-                return redactSettings;
+                case JTokenType.Array:
+                    JArray result = new JArray();
+                    for (int i = 0; i < ((JArray)redactSettings).Count; i++)
+                    {
+                        result.Add(RecursiveEvaluateCommandsInRedactSettings(redactSettings[i], json[i]));
+                    }
+
+                    return result;
+                case JTokenType.Object:
+                    List<string> objectKeys = ((JObject)redactSettings).Properties().Select(p => p.Name).ToList();
+                    if (objectKeys.Count != 1 || !objectKeys[0].StartsWith("REDACT", Globals.STRING_COMPARE_METHOD))
+                    {
+                        return EvaluateCommandInJObject((JObject)redactSettings, json);
+                    }
+                    else
+                    {
+                        // TODO: ?for each? implement
+                        return null;
+                    }
+                case JTokenType.Boolean:
+                    return redactSettings;
+                default:
+                    throw new BadRequestException("wrong");
             }
-            
-            List<string> objectKeys = redactSettings.Properties().Select(p => p.Name).ToList();
+        }
+
+        private static JToken EvaluateCommandInJObject(JObject command, JToken json)
+        {            
+            List<string> objectKeys = command.Properties().Select(p => p.Name).ToList();
             switch (objectKeys[0])
             {
                 case "REDACT:forEach":
                     try
                     {
-                        return GenerateArrayWithForEachCommand((JObject)redactSettings["REDACT:forEach"], (JArray)json);
+                        return GenerateArrayWithForEachCommand((JObject)command["REDACT:forEach"], (JArray)json);
                     }
                     catch (InvalidCastException)
                     {
@@ -54,7 +69,7 @@ namespace ObjectHashServer.Services.Implementations
                 case "REDACT:ifObjectContains":
                     try
                     {
-                        return RedactIfObjectContains(redactSettings["REDACT:ifObjectContains"], (JObject)json);
+                        return RedactIfObjectContains(command["REDACT:ifObjectContains"], (JObject)json);
                     }
                     catch (InvalidCastException)
                     {
@@ -63,7 +78,7 @@ namespace ObjectHashServer.Services.Implementations
                 case "REDACT:or":
                     try
                     {
-                        return RedactOr((JArray)redactSettings["REDACT:or"], json);
+                        return RedactOr((JArray)command["REDACT:or"], json);
                     }
                     catch (InvalidCastException)
                     {
@@ -72,7 +87,7 @@ namespace ObjectHashServer.Services.Implementations
                 case "REDACT:and":
                     try
                     {
-                        return RedactAnd((JArray)redactSettings["REDACT:and"], json);
+                        return RedactAnd((JArray)command["REDACT:and"], json);
                     }
                     catch (InvalidCastException)
                     {
@@ -81,7 +96,7 @@ namespace ObjectHashServer.Services.Implementations
                 default:
                     IDictionary additionalExceptionData = new Dictionary<string, object>
                     {
-                        { "commandObject", redactSettings }
+                        { "commandObject", command }
                     };
 
                     throw new BadRequestException("You have tried to use a redact command. The command you used is not valid. Currently available: 'REDACT:forEach'", additionalExceptionData);
