@@ -9,4 +9,3 @@ namespace ObjectHashServer.Models.Api.Request
         public JToken RedactSettings { get; set; }
     }
 }
-

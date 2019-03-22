@@ -24,6 +24,7 @@ namespace ObjectHashServer.Services.Implementations
 
         private static JToken RecursiveEvaluateCommands(JToken redactSettings, JToken json)
         {
+            // ReSharper disable once SwitchStatementMissingSomeCases
             switch (redactSettings.Type)
             {
                 case JTokenType.Array:
@@ -75,8 +76,7 @@ namespace ObjectHashServer.Services.Implementations
                 case "REDACT:forEach":
                     try
                     {
-                        return GenerateArrayWithForEachCommand((JObject) redactSettings["REDACT:forEach"],
-                            (JArray) json);
+                        return GenerateArrayWithForEachCommand(redactSettings["REDACT:forEach"], (JArray) json);
                     }
                     catch (InvalidCastException)
                     {
@@ -86,8 +86,7 @@ namespace ObjectHashServer.Services.Implementations
                 case "REDACT:ifObjectContains":
                     try
                     {
-                        return RedactIfObjectContains((JObject) redactSettings["REDACT:ifObjectContains"],
-                            (JObject) json);
+                        return RedactIfObjectContains((JObject) redactSettings["REDACT:ifObjectContains"], (JObject) json);
                     }
                     catch (InvalidCastException)
                     {
@@ -126,10 +125,9 @@ namespace ObjectHashServer.Services.Implementations
             }
         }
 
-        private static JArray GenerateArrayWithForEachCommand(JObject redactSettings, JArray json)
+        private static JArray GenerateArrayWithForEachCommand(JToken redactSettings, JArray json)
         {
             JArray result = new JArray();
-
             foreach (JToken subJson in json)
             {
                 result.Add(RecursiveEvaluateCommands(redactSettings, subJson));
@@ -146,13 +144,13 @@ namespace ObjectHashServer.Services.Implementations
 
         private static bool RedactOr(JArray orCommands, JToken json)
         {
-            return orCommands.Select((t, i) => RecursiveEvaluateCommands((JObject) t, json[i]))
+            return orCommands.Select((command, index) => RecursiveEvaluateCommands(command, json))
                 .Any(eval => (bool) eval);
         }
 
         private static bool RedactAnd(JArray andCommands, JToken json)
         {
-            return andCommands.Select((t, i) => RecursiveEvaluateCommands((JObject) t, json[i]))
+            return andCommands.Select((command, index) => RecursiveEvaluateCommands(command, json))
                 .All(eval => (bool) eval);
         }
     }

@@ -209,3 +209,6 @@ FakesAssemblies/
 
 # local appsettings
 appsettings.Development.json
+
+# rider IDE
+.idea/
