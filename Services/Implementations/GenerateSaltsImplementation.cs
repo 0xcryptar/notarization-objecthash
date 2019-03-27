@@ -39,7 +39,7 @@ namespace ObjectHashServer.Services.Implementations
                     }
                 case JTokenType.String:
                 {
-                    return ((string)json).StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) ? "**REDACTED*" : GenerateSaltForLeaf();
+                    return ((string)json).StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) ? "**REDACTED**" : GenerateSaltForLeaf();
                 }
                 case JTokenType.Integer:
                 case JTokenType.TimeSpan:
