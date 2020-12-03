@@ -21,8 +21,7 @@ namespace ObjectHashServer.Models
         {
             get
             {
-                ObjectRedactionImplementation r = new ObjectRedactionImplementation();
-                (JToken redactedData, _) = r.RedactJToken(Data, RedactSettings, Salts);
+                (JToken redactedData, _) = ObjectRedactionImplementation.RedactJToken(Data, RedactSettings, Salts);
                 return redactedData;
             }
         }
@@ -31,8 +30,7 @@ namespace ObjectHashServer.Models
         {
             get
             {
-                ObjectRedactionImplementation r = new ObjectRedactionImplementation();
-                (_, JToken redactedSalts) = r.RedactJToken(Data, RedactSettings, Salts);
+                (_, JToken redactedSalts) = ObjectRedactionImplementation.RedactJToken(Data, RedactSettings, Salts);
                 return redactedSalts;
             }
         }
