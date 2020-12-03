@@ -1,0 +1,23 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectHashServer", "ObjectHashServer\src\ObjectHashServer.csproj", "{1F4E91AA-E315-41CE-BD30-1C008DCB2581}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectHashServer.UnitTests", "ObjectHashServer\test\ObjectHashServer.UnitTests\ObjectHashServer.UnitTests.csproj", "{DB0D637B-4D89-4F11-82A2-21FA8F522899}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1F4E91AA-E315-41CE-BD30-1C008DCB2581}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F4E91AA-E315-41CE-BD30-1C008DCB2581}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F4E91AA-E315-41CE-BD30-1C008DCB2581}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F4E91AA-E315-41CE-BD30-1C008DCB2581}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
