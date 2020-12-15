@@ -33,7 +33,7 @@ namespace ObjectHashServer
             services.AddMvc(config =>
             {
                 config.Filters.Add(new ExceptionHandlerFilterAttribute());
-            }).SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            }).SetCompatibilityVersion(CompatibilityVersion.Version_3_0).AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
