@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using ObjectHashServer.Utils;
 
 namespace ObjectHashServer
@@ -11,10 +12,12 @@ namespace ObjectHashServer
     public class Startup
     {
         private readonly IConfiguration  _configuration;
-        
-        public Startup(IConfiguration configuration)
+        private readonly IWebHostEnvironment _environment;
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
             _configuration = configuration;
+            _environment = environment;
         }
         
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -34,23 +37,27 @@ namespace ObjectHashServer
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
-            if (env.IsDevelopment())
+            app.UseHsts();
+            app.UseHttpsRedirection();
+
+            // matches request to an endpoint
+            app.UseRouting();
+            
+            if (_environment.IsDevelopment() || _environment.IsStaging())
             {
                 app.UseDeveloperExceptionPage();
             }
-            else
+
+            // place UseAuthentication and UseAuthorization after UseRouting and UseCors but before UseEndpoints
+            app.UseAuthentication();
+
+            // execute the matched endpoint
+            app.UseEndpoints(endpoints =>
             {
-                // Hsts will be configure later
-                // app.UseHsts();
-            }
-
-            // app.UseMiddleware(typeof(ExceptionHandlingMiddleware));
-
-            // No redirect to https, https will be configure from devops
-            // app.UseHttpsRedirection();
-            app.UseMvc();
+                endpoints.MapControllers();
+            });
         }
     }
 }
