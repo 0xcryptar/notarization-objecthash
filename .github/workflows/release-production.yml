@@ -37,15 +37,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ASPNETCORE_ENVIRONMENT: Production
           SSL_STATUS: Enabled
-          CONNECTION_STRING: ${{ secrets.PRODUCTION_CONNECTION_STRING }}
       with:
         host: ${{ secrets.PRODUCTION_DIGITALOCEAN_HOST }}
         username: ${{ secrets.PRODUCTION_DIGITALOCEAN_USERNAME }}
         password: ${{ secrets.PRODUCTION_DIGITALOCEAN_PASSWORD }}
         port: 22
-        envs: GITHUB_REPOSITORY, GITHUB_USERNAME, GITHUB_TOKEN, ASPNETCORE_ENVIRONMENT, SSL_STATUS, CONNECTION_STRING
+        envs: GITHUB_REPOSITORY, GITHUB_USERNAME, GITHUB_TOKEN, ASPNETCORE_ENVIRONMENT, SSL_STATUS
         script: |
           docker stop $(docker ps -a -q)
           docker login docker.pkg.github.com -u $GITHUB_USERNAME -p $GITHUB_TOKEN
           docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/notarization-objecthash-production:latest
-          docker run -dit -p 80:80 -p 443:443 -e ASPNETCORE_URLS="https://+;http://+" -e ASPNETCORE_HTTPS_PORT=443 -e "ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENVIRONMENT" -e "SSL_STATUS=$SSL_STATUS" -e "CONNECTION_STRING=$CONNECTION_STRING" docker.pkg.github.com/$GITHUB_REPOSITORY/notarization-objecthash-production:latest
+          docker run -dit -p 80:80 -p 443:443 -e ASPNETCORE_URLS="https://+;http://+" -e ASPNETCORE_HTTPS_PORT=443 -e "ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENVIRONMENT" -e "SSL_STATUS=$SSL_STATUS" docker.pkg.github.com/$GITHUB_REPOSITORY/notarization-objecthash-production:latest
