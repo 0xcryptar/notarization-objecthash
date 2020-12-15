@@ -1,0 +1,51 @@
+name: Production Release
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.301
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build master
+      run: dotnet build --configuration Release --no-restore
+    - name: Test mater
+      run: dotnet test --no-restore --verbosity normal
+    - name: Push to GitHub Packages
+      uses: docker/build-push-action@v1
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        registry: docker.pkg.github.com
+        repository: ${{ github.repository }}/notarization-objecthash-production
+        tags: latest
+    - name: Deploy package to digitalocean
+      uses: appleboy/ssh-action@master
+      env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ASPNETCORE_ENVIRONMENT: Production
+          SSL_STATUS: Enabled
+          CONNECTION_STRING: ${{ secrets.PRODUCTION_CONNECTION_STRING }}
+      with:
+        host: ${{ secrets.PRODUCTION_DIGITALOCEAN_HOST }}
+        username: ${{ secrets.PRODUCTION_DIGITALOCEAN_USERNAME }}
+        password: ${{ secrets.PRODUCTION_DIGITALOCEAN_PASSWORD }}
+        port: 22
+        envs: GITHUB_REPOSITORY, GITHUB_USERNAME, GITHUB_TOKEN, ASPNETCORE_ENVIRONMENT, SSL_STATUS, CONNECTION_STRING
+        script: |
+          docker stop $(docker ps -a -q)
+          docker login docker.pkg.github.com -u $GITHUB_USERNAME -p $GITHUB_TOKEN
+          docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/notarization-objecthash-production:latest
+          docker run -dit -p 80:80 -p 443:443 -e ASPNETCORE_URLS="https://+;http://+" -e ASPNETCORE_HTTPS_PORT=443 -e "ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENVIRONMENT" -e "SSL_STATUS=$SSL_STATUS" -e "CONNECTION_STRING=$CONNECTION_STRING" docker.pkg.github.com/$GITHUB_REPOSITORY/notarization-objecthash-production:latest
