@@ -47,6 +47,15 @@ namespace ObjectHashServer
             
             if (_environment.IsDevelopment() || _environment.IsStaging())
             {
+                 app.UseCors(builder =>
+                    builder
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials()
+                        .WithOrigins("https://dev.trueprofile.io")
+                        .WithOrigins("https://stage.trueprofile.io")
+                );
+                
                 app.UseDeveloperExceptionPage();
             }
 
