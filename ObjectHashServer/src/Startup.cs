@@ -45,17 +45,17 @@ namespace ObjectHashServer
             // matches request to an endpoint
             app.UseRouting();
             
+            app.UseCors(builder =>
+                builder
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials()
+                    .WithOrigins("https://dev.trueprofile.io")
+                    .WithOrigins("https://stage.trueprofile.io")
+            );
+            
             if (_environment.IsDevelopment() || _environment.IsStaging())
             {
-                 app.UseCors(builder =>
-                    builder
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials()
-                        .WithOrigins("https://dev.trueprofile.io")
-                        .WithOrigins("https://stage.trueprofile.io")
-                );
-                
                 app.UseDeveloperExceptionPage();
             }
 
