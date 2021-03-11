@@ -50,6 +50,7 @@ namespace ObjectHashServer
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials()
+                    .WithOrigins("https://www.trueprofile.io")
                     .WithOrigins("https://dev.trueprofile.io")
                     .WithOrigins("https://stage.trueprofile.io")
             );
