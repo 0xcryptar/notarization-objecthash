@@ -53,6 +53,12 @@ namespace ObjectHashServer
                     .WithOrigins("https://www.trueprofile.io")
                     .WithOrigins("https://dev.trueprofile.io")
                     .WithOrigins("https://stage.trueprofile.io")
+                    .WithOrigins("https://member.dev.trueprofile.io")
+                    .WithOrigins("https://member.stage.trueprofile.io")
+                    .WithOrigins("https://member.trueprofile.io")
+                    .WithOrigins("https://partner.dev.trueprofile.io")
+                    .WithOrigins("https://partner.stage.trueprofile.io")
+                    .WithOrigins("https://partner.trueprofile.io")
             );
             
             if (_environment.IsDevelopment() || _environment.IsStaging())
