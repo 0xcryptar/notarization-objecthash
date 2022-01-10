@@ -3,6 +3,8 @@ name: Production Release
 on:
   push:
     branches: [ master ]
+  schedule:
+    - cron: '0 4 1 */2 *'
 
 jobs:
   build:
