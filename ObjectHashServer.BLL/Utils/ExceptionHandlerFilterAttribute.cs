@@ -1,13 +1,12 @@
-﻿using System;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ObjectHashServer.Exceptions;
-using ObjectHashServer.Models.Api.Response;
+using ObjectHashServer.BLL.Exceptions;
+using ObjectHashServer.BLL.Models.Api.Response;
 
-namespace ObjectHashServer.Utils
+namespace ObjectHashServer.BLL.Utils
 {
     /// <inheritdoc />
     /// <summary>

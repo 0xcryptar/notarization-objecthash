@@ -1,7 +1,7 @@
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using ObjectHashServer.Controllers;
-using ObjectHashServer.Models.Api.Request;
+using ObjectHashServer.BLL.Models.Api.Request;
 namespace ObjectHashServer.UnitTests.Controllers
 {
     [TestFixture]

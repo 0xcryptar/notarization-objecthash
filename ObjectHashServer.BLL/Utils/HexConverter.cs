@@ -1,10 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using Newtonsoft.Json.Linq;
-using ObjectHashServer.Exceptions;
+using ObjectHashServer.BLL.Exceptions;
 
-namespace ObjectHashServer.Utils
+namespace ObjectHashServer.BLL.Utils
 {
     public static class HexConverter
     {

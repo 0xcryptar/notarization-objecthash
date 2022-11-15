@@ -1,11 +1,10 @@
-﻿using System;
-using Newtonsoft.Json.Linq;
-using ObjectHashServer.Exceptions;
-using ObjectHashServer.Models.Api.Request;
-using ObjectHashServer.Models.Extensions;
-using ObjectHashServer.Utils;
+﻿using Newtonsoft.Json.Linq;
+using ObjectHashServer.BLL.Exceptions;
+using ObjectHashServer.BLL.Models.Api.Request;
+using ObjectHashServer.BLL.Models.Extensions;
+using ObjectHashServer.BLL.Utils;
 
-namespace ObjectHashServer.Services.Implementations
+namespace ObjectHashServer.BLL.Services.Implementations
 {
     public static class GenerateSaltsImplementation
     {

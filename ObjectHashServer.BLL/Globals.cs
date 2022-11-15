@@ -1,7 +1,6 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
-namespace ObjectHashServer
+namespace ObjectHashServer.BLL
 {
     public static class Globals
     {

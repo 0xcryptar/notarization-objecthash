@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Collections;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json.Linq;
-using ObjectHashServer.Exceptions;
-using ObjectHashServer.Models.Extensions;
-using ObjectHashServer.Utils;
+using ObjectHashServer.BLL.Exceptions;
+using ObjectHashServer.BLL.Models.Extensions;
+using ObjectHashServer.BLL.Utils;
 
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable SuggestBaseTypeForParameter
 
-namespace ObjectHashServer.Services.Implementations
+namespace ObjectHashServer.BLL.Services.Implementations
 {
     /// <summary>
     /// This is the C# implementation of the ObjectHash library from Ben Laurie. 

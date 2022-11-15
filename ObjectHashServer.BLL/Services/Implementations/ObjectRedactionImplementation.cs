@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using Newtonsoft.Json.Linq;
-using ObjectHashServer.Exceptions;
-using ObjectHashServer.Models.Extensions;
+using ObjectHashServer.BLL.Exceptions;
+using ObjectHashServer.BLL.Models.Extensions;
 
 // ReSharper disable PossibleNullReferenceException
 
-namespace ObjectHashServer.Services.Implementations
+namespace ObjectHashServer.BLL.Services.Implementations
 {
     public static class ObjectRedactionImplementation
     {
