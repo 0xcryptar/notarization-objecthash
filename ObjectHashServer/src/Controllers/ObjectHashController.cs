@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ObjectHashServer.Models;
-using ObjectHashServer.Models.Api.Request;
-using ObjectHashServer.Models.Api.Response;
-using ObjectHashServer.Services.Implementations;
+using ObjectHashServer.BLL.Models;
+using ObjectHashServer.BLL.Models.Api.Request;
+using ObjectHashServer.BLL.Models.Api.Response;
+using ObjectHashServer.BLL.Services.Implementations;
 
 namespace ObjectHashServer.Controllers
 {

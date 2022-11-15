@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json.Linq;
 
-namespace ObjectHashServer.Models.Api.Request
+namespace ObjectHashServer.BLL.Models.Api.Request
 {
     public class ObjectBaseRequestModel
     {

@@ -1,7 +1,6 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-namespace ObjectHashServer.Models.Api.Response
+namespace ObjectHashServer.BLL.Models.Api.Response
 {
     public abstract class ResponseModel
     {

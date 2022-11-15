@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 
-namespace ObjectHashServer.Exceptions
+namespace ObjectHashServer.BLL.Exceptions
 {
     public class BaseException : Exception
     {

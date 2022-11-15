@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
-using ObjectHashServer.Models.Api.Request;
-using ObjectHashServer.Services.Implementations;
+using ObjectHashServer.BLL.Models.Api.Request;
+using ObjectHashServer.BLL.Services.Implementations;
 
-namespace ObjectHashServer.Models
+namespace ObjectHashServer.BLL.Models
 {
     public class ObjectRedaction
     {

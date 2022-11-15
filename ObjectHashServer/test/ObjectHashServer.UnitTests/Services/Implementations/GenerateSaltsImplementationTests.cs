@@ -1,8 +1,9 @@
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
-using ObjectHashServer.Exceptions;
-using ObjectHashServer.Models.Api.Request;
-using ObjectHashServer.Services.Implementations;
+using ObjectHashServer.BLL;
+using ObjectHashServer.BLL.Exceptions;
+using ObjectHashServer.BLL.Models.Api.Request;
+using ObjectHashServer.BLL.Services.Implementations;
 
 namespace ObjectHashServer.UnitTests.Services.Implementations
 {

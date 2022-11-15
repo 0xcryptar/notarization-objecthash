@@ -1,11 +1,8 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json.Linq;
-using ObjectHashServer.Exceptions;
+using ObjectHashServer.BLL.Exceptions;
 
-namespace ObjectHashServer.Services.Implementations
+namespace ObjectHashServer.BLL.Services.Implementations
 {
     public static class EvaluateCommandsImplementation
     {

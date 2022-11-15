@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ObjectHashServer.Models.Api.Response
+namespace ObjectHashServer.BLL.Models.Api.Response
 {
     public class ErrorResponseModel : ResponseModel
     {

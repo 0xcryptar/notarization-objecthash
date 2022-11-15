@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace ObjectHashServer.Models.Extensions
+namespace ObjectHashServer.BLL.Models.Extensions
 {
     public static class JTokenExtension
     {
