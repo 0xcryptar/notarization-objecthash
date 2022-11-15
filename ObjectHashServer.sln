@@ -1,9 +1,14 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectHashServer", "ObjectHashServer\src\ObjectHashServer.csproj", "{1F4E91AA-E315-41CE-BD30-1C008DCB2581}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32929.385
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObjectHashServer", "ObjectHashServer\src\ObjectHashServer.csproj", "{1F4E91AA-E315-41CE-BD30-1C008DCB2581}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectHashServer.UnitTests", "ObjectHashServer\test\ObjectHashServer.UnitTests\ObjectHashServer.UnitTests.csproj", "{DB0D637B-4D89-4F11-82A2-21FA8F522899}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObjectHashServer.UnitTests", "ObjectHashServer\test\ObjectHashServer.UnitTests\ObjectHashServer.UnitTests.csproj", "{DB0D637B-4D89-4F11-82A2-21FA8F522899}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectHashServerr.API", "ObjectHashServerr.API\ObjectHashServerr.API.csproj", "{EAF500B0-2E49-4768-B21F-BB85194D152D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectHashServer.BLL", "ObjectHashServer.BLL\ObjectHashServer.BLL.csproj", "{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,5 +24,19 @@ Global
 		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAF500B0-2E49-4768-B21F-BB85194D152D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAF500B0-2E49-4768-B21F-BB85194D152D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAF500B0-2E49-4768-B21F-BB85194D152D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAF500B0-2E49-4768-B21F-BB85194D152D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {40DB31C1-A025-40B9-8B1F-E5CC7131ED21}
 	EndGlobalSection
 EndGlobal
