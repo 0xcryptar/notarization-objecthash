@@ -2,7 +2,7 @@ name: Build and deploy .NET Core application to Function App notarization-object
 on:
   push:
     branches:
-    - '#1_create_serverless_notarization_API'
+    - 'master'
 env:
   AZURE_FUNCTIONAPP_NAME: notarization-objecthash
   AZURE_FUNCTIONAPP_PACKAGE_PATH: ObjectHashServerr.API\.
