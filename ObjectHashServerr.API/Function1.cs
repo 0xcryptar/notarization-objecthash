@@ -34,8 +34,9 @@ namespace ObjectHashServerr.API
         [FunctionName("HashObject")]
         [OpenApiOperation(operationId: "hash-object", Description = "Generates salts for the recieved json.")]
         [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(JObject), Description = "Json for which the salts should be generated.", Required = true)]
+        [OpenApiParameter(name: "generateSalts", In = ParameterLocation.Path, Required = true, Type = typeof(bool), Description = "Generate salts?")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ObjectHashResponseModel), Description = "The generated/hashed result for the given json.")]
-        public async Task<ActionResult<ObjectHashResponseModel>> HashObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "hash-object")] HttpRequest req)
+        public async Task<ActionResult<ObjectHashResponseModel>> HashObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "hash-object/{generateSalts}")] HttpRequest req, bool generateSalts)
         {
             try
             {
@@ -56,6 +57,10 @@ namespace ObjectHashServerr.API
                 }
 
                 GenerateSaltsImplementation.SetRandomSaltsForObjectBaseRequestModel(requestModel);
+
+                if (!generateSalts)
+                    requestModel.Salts = null;
+
                 return new ObjectHashResponseModel(new ObjectHash(requestModel));
             }
             catch (Exception e)
