@@ -6,9 +6,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObjectHashServer", "ObjectH
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObjectHashServer.UnitTests", "ObjectHashServer\test\ObjectHashServer.UnitTests\ObjectHashServer.UnitTests.csproj", "{DB0D637B-4D89-4F11-82A2-21FA8F522899}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectHashServerr.API", "ObjectHashServerr.API\ObjectHashServerr.API.csproj", "{EAF500B0-2E49-4768-B21F-BB85194D152D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObjectHashServer.BLL", "ObjectHashServer.BLL\ObjectHashServer.BLL.csproj", "{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectHashServer.BLL", "ObjectHashServer.BLL\ObjectHashServer.BLL.csproj", "{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ObjectHashServer.API", "ObjectHashServer.API\ObjectHashServer.API.csproj", "{2660E5F4-205F-43E5-A8E4-D65247E85434}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,14 +24,14 @@ Global
 		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB0D637B-4D89-4F11-82A2-21FA8F522899}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EAF500B0-2E49-4768-B21F-BB85194D152D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EAF500B0-2E49-4768-B21F-BB85194D152D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EAF500B0-2E49-4768-B21F-BB85194D152D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EAF500B0-2E49-4768-B21F-BB85194D152D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8EA3625-99ED-4D43-9E72-FBE7A5968A52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2660E5F4-205F-43E5-A8E4-D65247E85434}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2660E5F4-205F-43E5-A8E4-D65247E85434}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2660E5F4-205F-43E5-A8E4-D65247E85434}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2660E5F4-205F-43E5-A8E4-D65247E85434}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
