@@ -1,16 +1,12 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -18,11 +14,10 @@ using ObjectHashServer.BLL.Models;
 using ObjectHashServer.BLL.Models.Api.Request;
 using ObjectHashServer.BLL.Models.Api.Response;
 using ObjectHashServer.BLL.Services.Implementations;
-using ObjectHashServer.Controllers;
 
-namespace ObjectHashServerr.API
+namespace ObjectHashServer.API
 {
-    public class Function1
+    public class ObjectHasherFunctions
     {
         /// <summary>
         /// Generates Salts for the recieved ObjectBaseRequestModel.
