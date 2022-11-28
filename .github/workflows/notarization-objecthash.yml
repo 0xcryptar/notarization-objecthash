@@ -5,10 +5,10 @@ on:
     - 'master'
 env:
   AZURE_FUNCTIONAPP_NAME: notarization-objecthash
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: ObjectHashServerr.API\.
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: ObjectHashServer.API\.
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 6.0.x
-  WORKING_DIRECTORY: ObjectHashServerr.API
+  WORKING_DIRECTORY: ObjectHashServer.API
 jobs:
   build-and-deploy:
     runs-on: windows-latest
