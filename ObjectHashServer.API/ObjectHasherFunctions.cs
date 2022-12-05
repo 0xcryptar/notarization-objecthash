@@ -29,11 +29,18 @@ namespace ObjectHashServer.API
         [FunctionName("HashObject")]
         [OpenApiOperation(operationId: "hash-object", Description = "Generates salts for the recieved json.")]
         [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(JObject), Description = "Json for which the salts should be generated.", Required = true)]
+        [OpenApiParameter(name: "generateSalts", In = ParameterLocation.Query, Required = true, Type = typeof(bool), Description = "Generate salts?")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ObjectHashResponseModel), Description = "The generated/hashed result for the given json.")]
         public async Task<ActionResult<ObjectHashResponseModel>> HashObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "hash-object")] HttpRequest req)
         {
             try
             {
+                // check if the salts should be generated or not
+                // if the query does not disable salt generation, by default salts are generated
+                bool generateSalts;
+                if (!bool.TryParse(req.Query["generateSalts"], out generateSalts))
+                    generateSalts = true;
+
                 ObjectHashRequestModel requestModel = null;
                 JObject jsonObject = null;
 
@@ -51,6 +58,10 @@ namespace ObjectHashServer.API
                 }
 
                 GenerateSaltsImplementation.SetRandomSaltsForObjectBaseRequestModel(requestModel);
+
+                if (!generateSalts)
+                    requestModel.Salts = null;
+
                 return new ObjectHashResponseModel(new ObjectHash(requestModel));
             }
             catch (Exception e)
@@ -101,4 +112,3 @@ namespace ObjectHashServer.API
         }
     }
 }
-
