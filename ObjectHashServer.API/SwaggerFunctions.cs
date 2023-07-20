@@ -108,5 +108,32 @@ namespace ObjectHashServer.API
                 return result;
             }
         }
+
+        /// <summary>
+        /// Enable the access of the swagger UI endpoint for the gateway..
+        /// </summary>
+        /// <returns/>
+        /// <response code="200">Successful call</response>
+        /// <response code="404">Not Found</response>
+        /// <response code="500">Internal Server Error</response>
+        [FunctionName("Gateway-Swagger-UI")]
+        [OpenApiOperation(operationId: "gateway-swagger-ui", Description = "Enable the access of the swagger UI endpoint for the gateway.")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string), Description = "The swagger UI.")]
+        public async Task<HttpResponseMessage> ReturnSwaggerUI([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway/swagger/ui")] HttpRequestMessage req)
+        {
+            try
+            {
+                HttpResponseMessage response = await client.GetAsync(NotarizationAPIURL + "/swagger/ui");
+                var ret = req.CreateResponse(HttpStatusCode.OK);
+                ret.Content = response.Content;
+                return ret;
+            }
+            catch (Exception e)
+            {
+                var result = new ObjectResult(e);
+                result.StatusCode = StatusCodes.Status500InternalServerError;
+                return null;
+            }
+        }
     }
 }
