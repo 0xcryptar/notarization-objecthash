@@ -29,7 +29,7 @@ namespace ObjectHashServer.API
         [FunctionName("Gateway-OAuth2-Redirect")]
         [OpenApiOperation(operationId: "gateway-oauth2-redirect", Description = "Enable the access of the OAuth2-Redirect endpoint for the gateway.")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string), Description = "The oauth2-redirect.html file.")]
-        public async Task<HttpResponseMessage> ReturnOuth2RedirectHtml([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway-oauth2-redirect.html")] HttpRequestMessage req)
+        public async Task<HttpResponseMessage> ReturnOuth2RedirectHtml([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway/oauth2-redirect.html")] HttpRequestMessage req)
         {
             try
             {
@@ -56,7 +56,7 @@ namespace ObjectHashServer.API
         [FunctionName("GatewayOpenapi")]
         [OpenApiOperation(operationId: "gateway-oauth2-redirect", Description = "Enable the access of the OAuth2-Redirect endpoint for the gateway.")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string), Description = "The oauth2-redirect.html file.")]
-        public async Task<ActionResult<string>> GenerateGatewayOpenapiSwagger([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway-openapi/{version}.{extension}")] HttpRequest req,
+        public async Task<ActionResult<string>> GenerateGatewayOpenapiSwagger([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway/openapi/{version}.{extension}")] HttpRequest req,
             string version, string extension)
         {
             try
@@ -88,7 +88,7 @@ namespace ObjectHashServer.API
         /// <response code="404">Not Found</response>
         /// <response code="500">Internal Server Error</response>
         [FunctionName("GatewaySwagger")]
-        public async Task<ActionResult<string>> GenerateGatewaySwagger([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway-swagger.{extension}")] HttpRequest req, 
+        public async Task<ActionResult<string>> GenerateGatewaySwagger([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway/swagger.{extension}")] HttpRequest req, 
             string extension)
         {
             try
