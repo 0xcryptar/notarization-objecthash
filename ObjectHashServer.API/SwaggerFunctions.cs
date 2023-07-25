@@ -119,14 +119,14 @@ namespace ObjectHashServer.API
         [FunctionName("Gateway-Swagger-UI")]
         [OpenApiOperation(operationId: "gateway-swagger-ui", Description = "Enable the access of the swagger UI endpoint for the gateway.")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string), Description = "The swagger UI.")]
-        public async Task<HttpResponseMessage> ReturnSwaggerUI([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway/swagger/ui")] HttpRequestMessage req)
+        public async Task<IActionResult> ReturnSwaggerUI([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway/swagger/ui")] HttpRequestMessage req)
         {
             try
             {
                 HttpResponseMessage response = await client.GetAsync(NotarizationAPIURL + "/swagger/ui");
-                var ret = req.CreateResponse(HttpStatusCode.OK);
-                ret.Content = response.Content;
-                return ret;
+                string content = await response.Content.ReadAsStringAsync();
+                return new ContentResult { Content = content.Replace("https://notarization-objecthash.azurewebsites.net/api/swagger.json", "https://api.cryptar.de/JSON2hash/swagger.json"),
+                    ContentType = "text/html" }; ;
             }
             catch (Exception e)
             {
