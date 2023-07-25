@@ -54,8 +54,8 @@ namespace ObjectHashServer.API
         /// <response code="404">Not Found</response>
         /// <response code="500">Internal Server Error</response>
         [FunctionName("GatewayOpenapi")]
-        [OpenApiOperation(operationId: "gateway-oauth2-redirect", Description = "Enable the access of the OAuth2-Redirect endpoint for the gateway.")]
-        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string), Description = "The oauth2-redirect.html file.")]
+        [OpenApiOperation(operationId: "gateway-openapi", Description = "Enable the access of the openapi description file endpoint for the gateway.")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(string), Description = "The openapi description file.")]
         public async Task<ActionResult<string>> GenerateGatewayOpenapiSwagger([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway/openapi/{version}.{extension}")] HttpRequest req,
             string version, string extension)
         {
