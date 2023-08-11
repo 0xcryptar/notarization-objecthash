@@ -110,5 +110,46 @@ namespace ObjectHashServer.API
                 return result;
             }
         }
+
+        /// <summary>
+        /// Calculates the redacted JSON.
+        /// </summary>
+        /// <returns/>
+        /// <response code="200">Successful call</response>
+        /// <response code="404">Not Found</response>
+        /// <response code="500">Internal Server Error</response>
+        [FunctionName("RedactObject")]
+        [OpenApiOperation(operationId: "redact-object", Description = "Calculates the redacted JSON given a settings file.")]
+        [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(ObjectRedactionRequestModel), Description = "ObjectRedactionRequestModel for which the redacted JSON should be calculated.", Required = true)]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ObjectRedactionResponseModel), Description = "ObjectRedactionResponseModel containing the redacted JSON.")]
+        public async Task<ActionResult<ObjectRedactionResponseModel>> RedactObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "redact-object")] HttpRequest req)
+        {
+            try
+            {
+                ObjectRedactionRequestModel requestModel = null;
+
+                try
+                {
+                    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                    requestModel = JsonConvert.DeserializeObject<ObjectRedactionRequestModel>(requestBody);
+                }
+                catch (Exception e)
+                {
+                    var result = new ObjectResult(e);
+                    result.StatusCode = StatusCodes.Status400BadRequest;
+                    return result;
+                }
+
+                ObjectRedactionImplementation.RedactJToken(requestModel.Data, requestModel.RedactSettings, requestModel.Salts);
+
+                return new ObjectRedactionResponseModel(new ObjectRedaction(requestModel));
+            }
+            catch (Exception e)
+            {
+                var result = new ObjectResult(e);
+                result.StatusCode = StatusCodes.Status500InternalServerError;
+                return result;
+            }
+        }
     }
 }
