@@ -141,7 +141,6 @@ namespace ObjectHashServer.API
                 }
 
                 ObjectRedactionImplementation.RedactJToken(requestModel.Data, requestModel.RedactSettings, requestModel.Salts);
-
                 return new ObjectRedactionResponseModel(new ObjectRedaction(requestModel));
             }
             catch (Exception e)
