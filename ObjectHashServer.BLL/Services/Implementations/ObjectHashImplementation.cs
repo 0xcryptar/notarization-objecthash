@@ -336,7 +336,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 e += 1;
             }
 
-            while (d < 0.5)
+            while (d <= 0.5)
             {
                 d *= 2;
                 e -= 1;

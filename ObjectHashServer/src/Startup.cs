@@ -12,9 +12,9 @@ namespace ObjectHashServer
     public class Startup
     {
         private readonly IConfiguration  _configuration;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IHostEnvironment _environment;
 
-        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
+        public Startup(IConfiguration configuration, IHostEnvironment environment)
         {
             _configuration = configuration;
             _environment = environment;
@@ -33,7 +33,7 @@ namespace ObjectHashServer
             services.AddMvc(config =>
             {
                 config.Filters.Add(new ExceptionHandlerFilterAttribute());
-            }).SetCompatibilityVersion(CompatibilityVersion.Version_3_0).AddNewtonsoftJson();
+            }).AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
