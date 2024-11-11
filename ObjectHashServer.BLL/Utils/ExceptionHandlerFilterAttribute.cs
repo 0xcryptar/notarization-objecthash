@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ObjectHashServer.BLL.Exceptions;
 using ObjectHashServer.BLL.Models.Api.Response;
@@ -62,7 +63,7 @@ namespace ObjectHashServer.BLL.Utils
                 logger.LogError(0, exception, exception.Message);
             }
 
-            IHostingEnvironment env = context.HttpContext.RequestServices.GetRequiredService<IHostingEnvironment>();
+            IHostEnvironment env = context.HttpContext.RequestServices.GetRequiredService<IHostEnvironment>();
             if (env.IsDevelopment())
             {
                 errorModel.ExceptionMessage = exception.Message;
