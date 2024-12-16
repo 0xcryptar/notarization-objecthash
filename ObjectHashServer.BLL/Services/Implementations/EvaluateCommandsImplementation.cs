@@ -11,12 +11,144 @@ namespace ObjectHashServer.BLL.Services.Implementations
         /// Result is a redact setting containing only booleans.
         /// This method does change the provided inputs. So there is no need to clone
         /// them before calling this method.
+        /// Members that are missing from the redaction setting will be redacted according the given default redaction behaviour.
         /// </summary>
         /// <returns>The fully evaluated redact settings object so that all JSON leaves
         /// only contain a boolean</returns>
-        public static JToken EvaluateCommands(JToken redactSettings, JToken json)
+        public static JToken EvaluateCommands(JToken redactSettings, JToken json, bool defaultLeaveRedaction = true)
         {
-            return RecursiveEvaluateCommands(redactSettings.DeepClone(), json.DeepClone());
+            var recursiveEvaluatedRedactionSettings =  RecursiveEvaluateCommands(redactSettings.DeepClone(), json.DeepClone());
+
+            RecursiveExtendStructureWithDefault(recursiveEvaluatedRedactionSettings, json, defaultLeaveRedaction);
+
+            return recursiveEvaluatedRedactionSettings;
+        }
+
+        /// <summary>
+        /// Extends the structure an evaluated redaction settings to match exactly that of the json with given default values.
+        /// </summary>
+        /// <param name="recursiveEvaluatedRedactionSettings"></param>
+        /// <param name="json"></param>
+        /// <param name="defaultLeaveRedaction"></param>
+        private static void RecursiveExtendStructureWithDefault(JToken redactSettings, JToken json, bool defaultLeaveRedaction)
+        {
+            switch (json.Type)
+            {
+                case JTokenType.Object:
+                    var jsonObject = (JObject)json;
+                    var redactObject = (JObject)redactSettings;
+                    foreach (var jprop in jsonObject.Properties())
+                    {
+                        if (redactObject.ContainsKey(jprop.Name))
+                        {
+                            if (redactObject[jprop.Name].Type == JTokenType.Boolean)
+                            {
+                                // this is good, already set, simply ignore
+                            }
+                            else if (redactObject[jprop.Name].Type == JTokenType.Array || redactObject[jprop.Name].Type == JTokenType.Object)
+                            {
+                                // fill recursively
+                                RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
+                            }
+                            else {
+                                // existing redaction setting that is neither array nor object and not a bool value should not be the case
+                                throw new Exception("We expect bool values or arrays or objects here.");
+                            }
+                        }
+                        else
+                        {
+                            switch (jprop.Value.Type)
+                            {
+                                // leaf values should simply produce a default redaction behaviour
+                                case JTokenType.None:
+                                case JTokenType.Integer:
+                                case JTokenType.Float:
+                                case JTokenType.String:
+                                case JTokenType.Boolean:
+                                case JTokenType.Null:
+                                case JTokenType.Undefined:
+                                case JTokenType.Date:
+                                case JTokenType.Raw:
+                                case JTokenType.Bytes:
+                                case JTokenType.Guid:
+                                case JTokenType.Uri:
+                                case JTokenType.TimeSpan:
+                                    redactObject[jprop.Name] = defaultLeaveRedaction;
+                                    break;
+
+                                // missing objects should be created and recursively populated
+                                case JTokenType.Object:
+                                    redactObject[jprop.Name] = new JObject();
+                                    RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
+                                    break;
+
+                                case JTokenType.Array:
+                                    redactObject[jprop.Name] = new JArray();
+                                    RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
+                                    break;
+                                default:
+                                    throw new Exception("This token type should not be reachable.");
+                            }
+                        }
+                    }
+                    break;
+
+                case JTokenType.Array:
+                    var jsonArray = (JArray)json;
+                    var redactArray = (JArray)redactSettings;
+
+                    // the counts should either matc, or the redacton be empty
+                    if (redactArray.Count != 0 && redactArray.Count != jsonArray.Count)
+                        throw new Exception("The redaction settings array to be extended should either match the json object or be empty.");
+
+                    if (redactArray.Count == 0)
+                    {
+                        // add nodes of proper type to the array
+                        // value nodes should get the redaction bool setting arrays and objects should be emtpy
+                        foreach (var vijson in jsonArray)
+                        {
+                            switch (vijson.Type)
+                            {
+                                // leaf values should simply produce a default redaction behaviour
+                                case JTokenType.None:
+                                case JTokenType.Integer:
+                                case JTokenType.Float:
+                                case JTokenType.String:
+                                case JTokenType.Boolean:
+                                case JTokenType.Null:
+                                case JTokenType.Undefined:
+                                case JTokenType.Date:
+                                case JTokenType.Raw:
+                                case JTokenType.Bytes:
+                                case JTokenType.Guid:
+                                case JTokenType.Uri:
+                                case JTokenType.TimeSpan:
+                                    redactArray.Add(defaultLeaveRedaction);
+                                    break;
+
+                                // missing objects should be created
+                                case JTokenType.Object:
+                                    redactArray.Add(new JObject());
+                                    break;
+
+                                case JTokenType.Array:
+                                    redactArray.Add(new JArray());
+                                    break;
+                                default:
+                                    throw new Exception("This token type should not be reachable.");
+                            }
+                        }
+                    }
+
+                    for (int i = 0; i < redactArray.Count; ++i)
+                    {
+                        if (redactArray[i].Type == JTokenType.Array || redactArray[i].Type == JTokenType.Object)
+                            RecursiveExtendStructureWithDefault(redactArray[i], jsonArray[i], defaultLeaveRedaction);
+                    }
+                    break;
+                default:
+                    throw new Exception("This token type should not be reachable.");
+            }
         }
 
         private static JToken RecursiveEvaluateCommands(JToken redactSettings, JToken json)
