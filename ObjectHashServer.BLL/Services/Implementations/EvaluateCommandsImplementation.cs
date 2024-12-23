@@ -1,6 +1,9 @@
 using System.Collections;
+using System.Runtime.CompilerServices;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
+
+[assembly: InternalsVisibleToAttribute("ObjectHashServer.UnitTests")]
 
 namespace ObjectHashServer.BLL.Services.Implementations
 {
@@ -30,8 +33,10 @@ namespace ObjectHashServer.BLL.Services.Implementations
         /// <param name="recursiveEvaluatedRedactionSettings"></param>
         /// <param name="json"></param>
         /// <param name="defaultLeaveRedaction"></param>
-        private static void RecursiveExtendStructureWithDefault(JToken redactSettings, JToken json, bool defaultLeaveRedaction)
+        internal static void RecursiveExtendStructureWithDefault(JToken redactSettings, JToken json, bool defaultLeaveRedaction)
         {
+           
+
             switch (json.Type)
             {
                 case JTokenType.Object:
@@ -97,16 +102,14 @@ namespace ObjectHashServer.BLL.Services.Implementations
                     var jsonArray = (JArray)json;
                     var redactArray = (JArray)redactSettings;
 
-                    // the counts should either matc, or the redacton be empty
-                    if (redactArray.Count != 0 && redactArray.Count != jsonArray.Count)
-                        throw new Exception("The redaction settings array to be extended should either match the json object or be empty.");
-
-                    if (redactArray.Count == 0)
+                    // add missing entries with proper type to add default values
+                    if (redactArray.Count < jsonArray.Count)
                     {
                         // add nodes of proper type to the array
                         // value nodes should get the redaction bool setting arrays and objects should be emtpy
-                        foreach (var vijson in jsonArray)
+                        for (int vi = redactArray.Count; vi<jsonArray.Count; ++vi)
                         {
+                            var vijson = jsonArray[vi];
                             switch (vijson.Type)
                             {
                                 // leaf values should simply produce a default redaction behaviour
