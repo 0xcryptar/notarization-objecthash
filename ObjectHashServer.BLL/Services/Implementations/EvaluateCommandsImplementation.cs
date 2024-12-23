@@ -182,7 +182,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
         private static JToken RecursiveEvaluateJArray(JArray redactSettings, JToken json)
         {
             JArray result = new JArray();
-            for (int i = 0; i < redactSettings.Count; i++)
+            for (int i = 0; i < Math.Min(redactSettings.Count, json.Count()); i++)
             {
                 result.Add(RecursiveEvaluateCommands(redactSettings[i], json[i]));
             }
