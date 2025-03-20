@@ -61,4 +61,4 @@ jobs:
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/bin/Release/net8.0
