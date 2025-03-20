@@ -24,6 +24,14 @@ jobs:
       run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
     - name: Build
       run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+
+    - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.NOTARIZATION_OBJECT_HASH_ID_CLIENT_ID }}
+          tenant-id: ${{ secrets.NOTARIZATION_OBJECT_HASH_ID_TENANT_ID }}
+          subscription-id: ${{ secrets.NOTARIZATION_OBJECT_HASH_ID_SUBSCRIPTION_ID }}
+
     - name: Publish
       run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}"
     - name: Deploy to Azure Function App
