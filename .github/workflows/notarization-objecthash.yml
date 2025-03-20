@@ -3,6 +3,8 @@ on:
   push:
     branches:
     - 'master'
+  workflow_dispatch:
+  
 env:
   AZURE_FUNCTIONAPP_NAME: notarization-objecthash
   AZURE_FUNCTIONAPP_PACKAGE_PATH: ObjectHashServer.API\.
