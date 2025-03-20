@@ -19,6 +19,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
+    
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
@@ -32,10 +33,10 @@ jobs:
 
     - name: SonarQube Scan Begin
       run: |
-        dotnet sonarscanner begin /k:"0xcryptar_notarization-objecthash_c0d56e29-f66f-4d92-8b23-ee3e0dfa97c9" \
-          /d:sonar.host.url="${{ secrets.SONARQUBE_HOST }}" \
-          /d:sonar.login="${{ secrets.SONARQUBE_TOKEN }}" \
-          /d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx" \
+        dotnet sonarscanner begin /k:"0xcryptar_notarization-objecthash_c0d56e29-f66f-4d92-8b23-ee3e0dfa97c9"
+          /d:sonar.host.url="${{ secrets.SONARQUBE_HOST }}"
+          /d:sonar.login="${{ secrets.SONARQUBE_TOKEN }}"
+          /d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx"
           /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
 
     - name: Build
