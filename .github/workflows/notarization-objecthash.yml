@@ -23,10 +23,29 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+
     - name: Restore
       run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
+
+    - name: Install SonarScanner
+      run: dotnet tool install --global dotnet-sonarscanner
+
+    - name: SonarQube Scan Begin
+      run: |
+        dotnet sonarscanner begin /k:"0xcryptar_notarization-objecthash_c0d56e29-f66f-4d92-8b23-ee3e0dfa97c9" \
+          /d:sonar.host.url="${{ secrets.SONARQUBE_HOST }}" \
+          /d:sonar.login="${{ secrets.SONARQUBE_TOKEN }}" \
+          /d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx" \
+          /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+
     - name: Build
       run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+
+    - name: Run tests
+      run: dotnet test --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+    - name: SonarQube Scan End
+      run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONARQUBE_TOKEN }}"
 
     - name: Login to Azure
       uses: azure/login@v2
