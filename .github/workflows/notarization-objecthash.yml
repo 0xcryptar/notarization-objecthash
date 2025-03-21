@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   
 env:
-  AZURE_FUNCTIONAPP_NAME: notarization-objecthash
+  AZURE_FUNCTIONAPP_NAME: notarization-object-hash
   AZURE_FUNCTIONAPP_PACKAGE_PATH: ObjectHashServer.API\.
   CONFIGURATION: Release
   DOTNET_VERSION: 8.0.x
