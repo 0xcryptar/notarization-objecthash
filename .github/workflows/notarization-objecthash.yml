@@ -26,7 +26,7 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Restore
-      run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
+      run: dotnet restore
 
     - name: Install SonarScanner
       run: dotnet tool install --global dotnet-sonarscanner
@@ -40,10 +40,10 @@ jobs:
         /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
 
     - name: Build
-      run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+      run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
 
     - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+      run: dotnet test -c Release --no-build --verbosity normal --collect:"XPlat Code Coverage;Format=opencover" --results-directory ./TestResults --logger trx
 
     - name: SonarQube Scan End
       run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONARQUBE_TOKEN }}"
@@ -55,8 +55,6 @@ jobs:
         tenant-id: ${{ secrets.NOTARIZATION_OBJECT_HASH_ID_TENANT_ID }}
         subscription-id: ${{ secrets.NOTARIZATION_OBJECT_HASH_ID_SUBSCRIPTION_ID }}
 
-    - name: Publish
-      run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}"
     - name: Deploy to Azure Function App
       uses: Azure/functions-action@v1
       with:
