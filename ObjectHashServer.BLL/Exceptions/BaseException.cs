@@ -7,7 +7,7 @@ namespace ObjectHashServer.BLL.Exceptions
         protected BaseException(string message, Exception innerException = null)
            : base(message, innerException)
         {
-            if(innerException != null)
+            if (innerException != null)
                 base.Data.Add("innerException", innerException);
         }
 

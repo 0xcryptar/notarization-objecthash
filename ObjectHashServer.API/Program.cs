@@ -3,9 +3,8 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Extensions.OpenApi.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
-using Sentry;
+using Newtonsoft.Json.Serialization;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()

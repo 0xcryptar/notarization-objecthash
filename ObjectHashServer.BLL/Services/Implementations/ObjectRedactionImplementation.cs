@@ -1,7 +1,7 @@
-﻿using System.Collections;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
 using ObjectHashServer.BLL.Models.Extensions;
+using System.Collections;
 
 // ReSharper disable PossibleNullReferenceException
 
@@ -33,7 +33,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
             switch (redactSettings.Type)
             {
                 case JTokenType.Boolean:
-                    if (!(bool) redactSettings) return (json, salts);
+                    if (!(bool)redactSettings) return (json, salts);
 
                     ObjectHashImplementation objectHash = new ObjectHashImplementation();
                     objectHash.HashJToken(json, salts);
@@ -41,8 +41,8 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 case JTokenType.Object:
                     try
                     {
-                        return RedactObject((JObject) json, (JObject) redactSettings,
-                            salts.IsNullOrEmpty() ? null : (JObject) salts);
+                        return RedactObject((JObject)json, (JObject)redactSettings,
+                            salts.IsNullOrEmpty() ? null : (JObject)salts);
                     }
                     catch (InvalidCastException e)
                     {
@@ -52,8 +52,8 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 case JTokenType.Array:
                     try
                     {
-                        return RedactArray((JArray) json, (JArray) redactSettings,
-                            salts.IsNullOrEmpty() ? null : (JArray) salts);
+                        return RedactArray((JArray)json, (JArray)redactSettings,
+                            salts.IsNullOrEmpty() ? null : (JArray)salts);
                     }
                     catch (InvalidCastException e)
                     {
@@ -61,9 +61,9 @@ namespace ObjectHashServer.BLL.Services.Implementations
                             "The provided JSON does not contain an array -> [] where the redact settings require one. Please check the JSON data or the redact settings", e);
                     }
                 case JTokenType.Null:
-                {
-                    return (json, salts);
-                }
+                    {
+                        return (json, salts);
+                    }
                 default:
                     throw new BadRequestException(
                         "The redact setting JSON is invalid. It can only contain a nested JSON, arrays and the data type Boolean.");

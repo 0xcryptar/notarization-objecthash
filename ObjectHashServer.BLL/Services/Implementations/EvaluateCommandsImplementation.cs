@@ -1,7 +1,7 @@
-using System.Collections;
-using System.Runtime.CompilerServices;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
+using System.Collections;
+using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleToAttribute("ObjectHashServer.UnitTests")]
 
@@ -20,7 +20,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
         /// only contain a boolean</returns>
         public static JToken EvaluateCommands(JToken redactSettings, JToken json, bool defaultLeaveRedaction = true)
         {
-            var recursiveEvaluatedRedactionSettings =  RecursiveEvaluateCommands(redactSettings.DeepClone(), json.DeepClone());
+            var recursiveEvaluatedRedactionSettings = RecursiveEvaluateCommands(redactSettings.DeepClone(), json.DeepClone());
 
             RecursiveExtendStructureWithDefault(recursiveEvaluatedRedactionSettings, json, defaultLeaveRedaction);
 
@@ -35,7 +35,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
         /// <param name="defaultLeaveRedaction"></param>
         internal static void RecursiveExtendStructureWithDefault(JToken redactSettings, JToken json, bool defaultLeaveRedaction)
         {
-           
+
 
             switch (json.Type)
             {
@@ -55,7 +55,8 @@ namespace ObjectHashServer.BLL.Services.Implementations
                                 // fill recursively
                                 RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
                             }
-                            else {
+                            else
+                            {
                                 // existing redaction setting that is neither array nor object and not a bool value should not be the case
                                 throw new Exception("We expect bool values or arrays or objects here.");
                             }
@@ -107,7 +108,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
                     {
                         // add nodes of proper type to the array
                         // value nodes should get the redaction bool setting arrays and objects should be emtpy
-                        for (int vi = redactArray.Count; vi<jsonArray.Count; ++vi)
+                        for (int vi = redactArray.Count; vi < jsonArray.Count; ++vi)
                         {
                             var vijson = jsonArray[vi];
                             switch (vijson.Type)
@@ -160,16 +161,16 @@ namespace ObjectHashServer.BLL.Services.Implementations
             switch (redactSettings.Type)
             {
                 case JTokenType.Array:
-                    return RecursiveEvaluateJArray((JArray) redactSettings, json);
+                    return RecursiveEvaluateJArray((JArray)redactSettings, json);
                 case JTokenType.Object:
-                    List<string> objectKeys = ((JObject) redactSettings).Properties().Select(p => p.Name).ToList();
+                    List<string> objectKeys = ((JObject)redactSettings).Properties().Select(p => p.Name).ToList();
                     if (objectKeys.Count == 1 && objectKeys[0].StartsWith("REDACT", Globals.STRING_COMPARE_METHOD))
                     {
-                        return EvaluateSingleCommand(objectKeys[0], (JObject) redactSettings, json);
+                        return EvaluateSingleCommand(objectKeys[0], (JObject)redactSettings, json);
                     }
                     else
                     {
-                        return RecursiveEvaluateJObject((JObject) redactSettings, json);
+                        return RecursiveEvaluateJObject((JObject)redactSettings, json);
                     }
                 case JTokenType.Boolean:
                     return redactSettings;
@@ -208,7 +209,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 case "REDACT:forEach":
                     try
                     {
-                        return GenerateArrayWithForEachCommand(redactSettings["REDACT:forEach"], (JArray) json);
+                        return GenerateArrayWithForEachCommand(redactSettings["REDACT:forEach"], (JArray)json);
                     }
                     catch (InvalidCastException)
                     {
@@ -218,7 +219,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 case "REDACT:ifObjectContains":
                     try
                     {
-                        return RedactIfObjectContains((JObject) redactSettings["REDACT:ifObjectContains"], (JObject) json);
+                        return RedactIfObjectContains((JObject)redactSettings["REDACT:ifObjectContains"], (JObject)json);
                     }
                     catch (InvalidCastException)
                     {
@@ -228,7 +229,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 case "REDACT:or":
                     try
                     {
-                        return RedactOr((JArray) redactSettings["REDACT:or"], json);
+                        return RedactOr((JArray)redactSettings["REDACT:or"], json);
                     }
                     catch (InvalidCastException)
                     {
@@ -238,7 +239,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 case "REDACT:and":
                     try
                     {
-                        return RedactAnd((JArray) redactSettings["REDACT:and"], json);
+                        return RedactAnd((JArray)redactSettings["REDACT:and"], json);
                     }
                     catch (InvalidCastException)
                     {
@@ -277,13 +278,13 @@ namespace ObjectHashServer.BLL.Services.Implementations
         private static bool RedactOr(JArray orCommands, JToken json)
         {
             return orCommands.Select((command, index) => RecursiveEvaluateCommands(command, json))
-                .Any(eval => (bool) eval);
+                .Any(eval => (bool)eval);
         }
 
         private static bool RedactAnd(JArray andCommands, JToken json)
         {
             return andCommands.Select((command, index) => RecursiveEvaluateCommands(command, json))
-                .All(eval => (bool) eval);
+                .All(eval => (bool)eval);
         }
     }
 }

@@ -1,8 +1,6 @@
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using ObjectHashServer.BLL.Services.Implementations;
-using System;
-using System.Text.Json.Nodes;
 
 namespace ObjectHashServer.UnitTests.Services.Implementations
 {

@@ -1,21 +1,15 @@
-using System;
-using System.IO;
-using System.Net;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.OpenApi.Models;
-using Microsoft.Azure.Functions.Worker.Extensions.OpenApi.Extensions;
-using Microsoft.Azure.Functions.Worker.Http;
-
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Models;
 using ObjectHashServer.BLL.Models.Api.Request;
 using ObjectHashServer.BLL.Models.Api.Response;
 using ObjectHashServer.BLL.Services.Implementations;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+using System.Net;
 
 namespace ObjectHashServer.API
 {

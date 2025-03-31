@@ -10,7 +10,7 @@ namespace ObjectHashServer.Controllers
     public class ObjectRedactionController : ControllerBase
     {
         [HttpPost]
-        public ActionResult<ObjectRedactionResponseModel> Post([FromBody]ObjectRedactionRequestModel model)
+        public ActionResult<ObjectRedactionResponseModel> Post([FromBody] ObjectRedactionRequestModel model)
         {
             return new ObjectRedactionResponseModel(new ObjectRedaction(model));
         }

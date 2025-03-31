@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+﻿using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Newtonsoft.Json.Linq;
+using System.ComponentModel.DataAnnotations;
 
 namespace ObjectHashServer.BLL.Models.Api.Request
 {

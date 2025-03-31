@@ -1,6 +1,6 @@
-﻿using System.Text;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
+using System.Text;
 
 namespace ObjectHashServer.BLL.Utils
 {

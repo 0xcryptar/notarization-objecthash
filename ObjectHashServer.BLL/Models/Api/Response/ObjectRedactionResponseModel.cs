@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Models.Api.Request;
-using ObjectHashServer.BLL.Services.Implementations;
 
 namespace ObjectHashServer.BLL.Models.Api.Response
 {
