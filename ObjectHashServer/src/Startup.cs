@@ -1,17 +1,16 @@
-﻿using System;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using ObjectHashServer.BLL.Utils;
+using System;
 
 namespace ObjectHashServer
 {
     public class Startup
     {
-        private readonly IConfiguration  _configuration;
+        private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _environment;
 
         public Startup(IConfiguration configuration, IHostEnvironment environment)
@@ -19,17 +18,17 @@ namespace ObjectHashServer
             _configuration = configuration;
             _environment = environment;
         }
-        
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            
+
             if (string.Equals(_configuration["SSL_STATUS"], "Enabled", StringComparison.CurrentCultureIgnoreCase))
             {
                 // Add SSL encryption using Lets Encrypt
                 services.AddLettuceEncrypt();
             }
-            
+
             services.AddMvc(config =>
             {
                 config.Filters.Add(new ExceptionHandlerFilterAttribute());
@@ -44,7 +43,7 @@ namespace ObjectHashServer
 
             // matches request to an endpoint
             app.UseRouting();
-            
+
             app.UseCors(builder =>
                 builder
                     .AllowAnyHeader()
@@ -60,7 +59,7 @@ namespace ObjectHashServer
                     .WithOrigins("https://partner.stage.trueprofile.io")
                     .WithOrigins("https://partner.trueprofile.io")
             );
-            
+
             if (_environment.IsDevelopment() || _environment.IsStaging())
             {
                 app.UseDeveloperExceptionPage();

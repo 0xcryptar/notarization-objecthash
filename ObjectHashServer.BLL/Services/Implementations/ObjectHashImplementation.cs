@@ -1,10 +1,10 @@
-﻿using System.Collections;
-using System.Security.Cryptography;
-using System.Text;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
 using ObjectHashServer.BLL.Models.Extensions;
 using ObjectHashServer.BLL.Utils;
+using System.Collections;
+using System.Security.Cryptography;
+using System.Text;
 
 // ReSharper disable PossibleNullReferenceException
 // ReSharper disable SuggestBaseTypeForParameter
@@ -39,85 +39,85 @@ namespace ObjectHashServer.BLL.Services.Implementations
             switch (json.Type)
             {
                 case JTokenType.Array:
-                {
-                    try
                     {
-                        HashArray((JArray) json, salts.IsNullOrEmpty() ? null : (JArray) salts);
-                    }
-                    catch (InvalidCastException)
-                    {
-                        throw new BadRequestException(
-                            "The provided Salt does not match the JSON object. An array => [] is expected but the Salt data is not of type array");
-                    }
+                        try
+                        {
+                            HashArray((JArray)json, salts.IsNullOrEmpty() ? null : (JArray)salts);
+                        }
+                        catch (InvalidCastException)
+                        {
+                            throw new BadRequestException(
+                                "The provided Salt does not match the JSON object. An array => [] is expected but the Salt data is not of type array");
+                        }
 
-                    break;
-                }
+                        break;
+                    }
                 case JTokenType.Object:
-                {
-                    try
                     {
-                        HashObject((JObject) json, salts.IsNullOrEmpty() ? null : (JObject) salts);
-                    }
-                    catch (InvalidCastException)
-                    {
-                        throw new BadRequestException(
-                            "The provided Salt does not match the JSON object. An object => {} is expected but the Salt data is not of type object");
-                    }
+                        try
+                        {
+                            HashObject((JObject)json, salts.IsNullOrEmpty() ? null : (JObject)salts);
+                        }
+                        catch (InvalidCastException)
+                        {
+                            throw new BadRequestException(
+                                "The provided Salt does not match the JSON object. An object => {} is expected but the Salt data is not of type object");
+                        }
 
-                    break;
-                }
+                        break;
+                    }
                 case JTokenType.String:
                 case JTokenType.TimeSpan:
                 case JTokenType.Guid:
                 case JTokenType.Uri:
-                {
-                    HashString((string) json, salts);
-                    break;
-                }
+                    {
+                        HashString((string)json, salts);
+                        break;
+                    }
                 case JTokenType.Null:
                 case JTokenType.None:
-                {
-                    HashNull(salts);
-                    break;
-                }
+                    {
+                        HashNull(salts);
+                        break;
+                    }
                 case JTokenType.Boolean:
-                {
-                    HashBoolean((bool) json, salts);
-                    break;
-                }
+                    {
+                        HashBoolean((bool)json, salts);
+                        break;
+                    }
                 case JTokenType.Integer:
-                {
-                    if (Globals.COMMON_JSONIFY)
                     {
-                        HashDouble((double) json, salts);
-                    }
-                    else
-                    {
-                        HashLong((long) json, salts);
-                    }
+                        if (Globals.COMMON_JSONIFY)
+                        {
+                            HashDouble((double)json, salts);
+                        }
+                        else
+                        {
+                            HashLong((long)json, salts);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
                 case JTokenType.Float:
-                {
-                    HashDouble((double) json, salts);
-                    break;
-                }
+                    {
+                        HashDouble((double)json, salts);
+                        break;
+                    }
                 case JTokenType.Bytes:
-                {
-                    HashBytes((byte[]) json, salts);
-                    break;
-                }
+                    {
+                        HashBytes((byte[])json, salts);
+                        break;
+                    }
                 case JTokenType.Date:
-                {
-                    HashDateTime((DateTime) json, salts);
-                    break;
-                }
+                    {
+                        HashDateTime((DateTime)json, salts);
+                        break;
+                    }
                 default:
-                {
-                    throw new BadRequestException(
-                        $"The provided JSON has an invalid type of {json.Type}. Please remove it.");
-                }
+                    {
+                        throw new BadRequestException(
+                            $"The provided JSON has an invalid type of {json.Type}. Please remove it.");
+                    }
             }
         }
 
@@ -126,7 +126,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
             // copying of byteArrays is quite ugly but there is no nicer way in C# to join two byte arrays
             byte[] merged = new byte[byteArray.Length + 1];
             byteArray.CopyTo(merged, 1);
-            merged[0] = (byte) tag;
+            merged[0] = (byte)tag;
             byte[] tempHash = _digester.ComputeHash(merged);
 
             if (salt != null)
@@ -135,7 +135,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 HexConverter.ValidateStringIsHexAndBlockLength(salt);
                 // hash salt to equally distribute randomness
                 ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
-                jKeyHash.HashString((string) salt);
+                jKeyHash.HashString((string)salt);
                 // merge salt and object hash as list
                 byte[][] hashList = new byte[2][];
                 hashList[0] = jKeyHash.Hash;
@@ -265,7 +265,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
             }
 
             _memoryStream.Flush();
-            _memoryStream.WriteByte((byte) type);
+            _memoryStream.WriteByte((byte)type);
             for (int i = 0; i < hashList.GetLength(0); i++)
             {
                 _memoryStream.Write(hashList[i]);
@@ -301,7 +301,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
         /// </summary>
         /// <returns>String of the normalized double</returns>
         /// <param name="d">Input value</param>
-        #pragma warning disable RECS0018 // Comparison of floating point numbers with equality operator
+#pragma warning disable RECS0018 // Comparison of floating point numbers with equality operator
         private static string NormalizeDouble(double d)
         {
             // Early outs for special cases like NaN, +/- infinity or equality to 0
@@ -326,6 +326,11 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 return "+0:";
             }
 
+            return HandleNotSpecialValue(d);
+        }
+
+        private static string HandleNotSpecialValue(double d)
+        {
             StringBuilder sb = new StringBuilder();
             sb.Append(d < 0.0 ? '-' : '+');
             if (d < 0.0) d = -d;
@@ -347,7 +352,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
 
             if (d > 1 || d <= 0.5)
             {
-                throw new Exception("wrong range for mantissa");
+                throw new ArgumentException("wrong range for mantissa");
             }
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
@@ -365,12 +370,12 @@ namespace ObjectHashServer.BLL.Services.Implementations
 
                 if (d >= 1)
                 {
-                    throw new Exception("oops, f is too big");
+                    throw new ArgumentException("oops, f is too big");
                 }
 
                 if (sb.Length > 1000)
                 {
-                    throw new Exception("things have got out of hand");
+                    throw new ArgumentException("things have got out of hand");
                 }
 
                 d *= 2;
@@ -378,6 +383,6 @@ namespace ObjectHashServer.BLL.Services.Implementations
 
             return sb.ToString();
         }
-        #pragma warning restore RECS0018 // Comparison of floating point numbers with equality operator
+#pragma warning restore RECS0018 // Comparison of floating point numbers with equality operator
     }
 }

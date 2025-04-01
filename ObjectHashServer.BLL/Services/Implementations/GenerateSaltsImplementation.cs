@@ -37,9 +37,9 @@ namespace ObjectHashServer.BLL.Services.Implementations
                         return OverrideObjectWithSalts((JObject)json);
                     }
                 case JTokenType.String:
-                {
-                    return ((string)json).StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) ? "**REDACTED**" : GenerateSaltForLeaf();
-                }
+                    {
+                        return ((string)json).StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) ? "**REDACTED**" : GenerateSaltForLeaf();
+                    }
                 case JTokenType.Integer:
                 case JTokenType.TimeSpan:
                 case JTokenType.Guid:

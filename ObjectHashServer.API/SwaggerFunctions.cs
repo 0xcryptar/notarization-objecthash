@@ -1,15 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
-using Microsoft.Azure.WebJobs;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Net;
-using System.Threading.Tasks;
-using System;
-using System.Net.Http;
 
 namespace ObjectHashServer.API
 {
@@ -65,7 +62,7 @@ namespace ObjectHashServer.API
                 string json = await response.Content.ReadAsStringAsync();
 
                 JObject swagger = JObject.Parse(json);
-                JArray servers = (JArray) swagger.SelectToken("servers");
+                JArray servers = (JArray)swagger.SelectToken("servers");
                 servers.Clear();
                 JObject url = new JObject();
                 url.Add("url", "api.cryptar.de");
@@ -88,7 +85,7 @@ namespace ObjectHashServer.API
         /// <response code="404">Not Found</response>
         /// <response code="500">Internal Server Error</response>
         [FunctionName("GatewaySwagger")]
-        public async Task<ActionResult<string>> GenerateGatewaySwagger([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway/swagger.{extension}")] HttpRequest req, 
+        public async Task<ActionResult<string>> GenerateGatewaySwagger([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "gateway/swagger.{extension}")] HttpRequest req,
             string extension)
         {
             try
@@ -125,8 +122,11 @@ namespace ObjectHashServer.API
             {
                 HttpResponseMessage response = await client.GetAsync(NotarizationAPIURL + "/swagger/ui");
                 string content = await response.Content.ReadAsStringAsync();
-                return new ContentResult { Content = content.Replace("https://notarization-objecthash.azurewebsites.net/api/swagger.json", "https://api.cryptar.de/JSON2hash/swagger.json"),
-                    ContentType = "text/html" }; ;
+                return new ContentResult
+                {
+                    Content = content.Replace("https://notarization-objecthash.azurewebsites.net/api/swagger.json", "https://api.cryptar.de/JSON2hash/swagger.json"),
+                    ContentType = "text/html"
+                }; ;
             }
             catch (Exception e)
             {

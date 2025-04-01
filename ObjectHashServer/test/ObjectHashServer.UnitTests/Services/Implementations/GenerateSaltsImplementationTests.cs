@@ -14,7 +14,7 @@ namespace ObjectHashServer.UnitTests.Services.Implementations
         public void SetRandomSaltsForObjectBaseRequestModel_WithSalts_WillThrowBadRequest()
         {
             ObjectBaseRequestModel request = new ObjectBaseRequestModel() { Data = new JObject(new JProperty("sample", "object")), Salts = new JObject(new JProperty("sample", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")) };
-                        
+
             Assert.That(() => GenerateSaltsImplementation.SetRandomSaltsForObjectBaseRequestModel(request),
                 Throws.Exception.TypeOf<BadRequestException>());
         }
@@ -51,7 +51,7 @@ namespace ObjectHashServer.UnitTests.Services.Implementations
 
             GenerateSaltsImplementation.SetRandomSaltsForObjectBaseRequestModel(request);
 
-            Assert.That(request.Salts["obj1"]["obj2"].Type, Is.EqualTo(JTokenType.String));            
+            Assert.That(request.Salts["obj1"]["obj2"].Type, Is.EqualTo(JTokenType.String));
             Assert.That((string)request.Salts["obj1"]["obj2"], Is.EqualTo("**REDACTED**"));
         }
     }
