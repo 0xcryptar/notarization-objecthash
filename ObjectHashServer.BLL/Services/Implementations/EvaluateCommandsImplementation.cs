@@ -2,6 +2,7 @@ using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
 using System.Collections;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Nodes;
 
 [assembly: InternalsVisibleToAttribute("ObjectHashServer.UnitTests")]
 
@@ -35,124 +36,147 @@ namespace ObjectHashServer.BLL.Services.Implementations
         /// <param name="defaultLeaveRedaction"></param>
         internal static void RecursiveExtendStructureWithDefault(JToken redactSettings, JToken json, bool defaultLeaveRedaction)
         {
-
-
             switch (json.Type)
             {
                 case JTokenType.Object:
-                    var jsonObject = (JObject)json;
-                    var redactObject = (JObject)redactSettings;
-                    foreach (var jprop in jsonObject.Properties())
-                    {
-                        if (redactObject.ContainsKey(jprop.Name))
-                        {
-                            if (redactObject[jprop.Name].Type == JTokenType.Boolean)
-                            {
-                                // this is good, already set, simply ignore
-                            }
-                            else if (redactObject[jprop.Name].Type == JTokenType.Array || redactObject[jprop.Name].Type == JTokenType.Object)
-                            {
-                                // fill recursively
-                                RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
-                            }
-                            else
-                            {
-                                // existing redaction setting that is neither array nor object and not a bool value should not be the case
-                                throw new Exception("We expect bool values or arrays or objects here.");
-                            }
-                        }
-                        else
-                        {
-                            switch (jprop.Value.Type)
-                            {
-                                // leaf values should simply produce a default redaction behaviour
-                                case JTokenType.None:
-                                case JTokenType.Integer:
-                                case JTokenType.Float:
-                                case JTokenType.String:
-                                case JTokenType.Boolean:
-                                case JTokenType.Null:
-                                case JTokenType.Undefined:
-                                case JTokenType.Date:
-                                case JTokenType.Raw:
-                                case JTokenType.Bytes:
-                                case JTokenType.Guid:
-                                case JTokenType.Uri:
-                                case JTokenType.TimeSpan:
-                                    redactObject[jprop.Name] = defaultLeaveRedaction;
-                                    break;
-
-                                // missing objects should be created and recursively populated
-                                case JTokenType.Object:
-                                    redactObject[jprop.Name] = new JObject();
-                                    RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
-                                    break;
-
-                                case JTokenType.Array:
-                                    redactObject[jprop.Name] = new JArray();
-                                    RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
-                                    break;
-                                default:
-                                    throw new Exception("This token type should not be reachable.");
-                            }
-                        }
-                    }
+                    HandleObjectType(redactSettings, json, defaultLeaveRedaction);
                     break;
 
                 case JTokenType.Array:
-                    var jsonArray = (JArray)json;
-                    var redactArray = (JArray)redactSettings;
-
-                    // add missing entries with proper type to add default values
-                    if (redactArray.Count < jsonArray.Count)
-                    {
-                        // add nodes of proper type to the array
-                        // value nodes should get the redaction bool setting arrays and objects should be emtpy
-                        for (int vi = redactArray.Count; vi < jsonArray.Count; ++vi)
-                        {
-                            var vijson = jsonArray[vi];
-                            switch (vijson.Type)
-                            {
-                                // leaf values should simply produce a default redaction behaviour
-                                case JTokenType.None:
-                                case JTokenType.Integer:
-                                case JTokenType.Float:
-                                case JTokenType.String:
-                                case JTokenType.Boolean:
-                                case JTokenType.Null:
-                                case JTokenType.Undefined:
-                                case JTokenType.Date:
-                                case JTokenType.Raw:
-                                case JTokenType.Bytes:
-                                case JTokenType.Guid:
-                                case JTokenType.Uri:
-                                case JTokenType.TimeSpan:
-                                    redactArray.Add(defaultLeaveRedaction);
-                                    break;
-
-                                // missing objects should be created
-                                case JTokenType.Object:
-                                    redactArray.Add(new JObject());
-                                    break;
-
-                                case JTokenType.Array:
-                                    redactArray.Add(new JArray());
-                                    break;
-                                default:
-                                    throw new Exception("This token type should not be reachable.");
-                            }
-                        }
-                    }
-
-                    for (int i = 0; i < redactArray.Count; ++i)
-                    {
-                        if (redactArray[i].Type == JTokenType.Array || redactArray[i].Type == JTokenType.Object)
-                            RecursiveExtendStructureWithDefault(redactArray[i], jsonArray[i], defaultLeaveRedaction);
-                    }
+                    HandleArrayType(redactSettings, json, defaultLeaveRedaction);
                     break;
                 default:
-                    throw new Exception("This token type should not be reachable.");
+                    throw new ArgumentException("This token type should not be reachable.");
             }
+        }
+
+        private static void HandleObjectType(JToken redactSettings, JToken json, bool defaultLeaveRedaction)
+        {
+            var jsonObject = (JObject)json;
+            var redactObject = (JObject)redactSettings;
+            foreach (var jprop in jsonObject.Properties())
+            {
+                if (redactObject.ContainsKey(jprop.Name))
+                {
+                    HandleExistingProperty(redactObject, jprop, defaultLeaveRedaction);
+                }
+                else
+                {
+                    HandleMissingProperty(redactObject, jprop, defaultLeaveRedaction);
+                }
+            }
+        }
+
+        private static void HandleExistingProperty(JObject redactObject, JProperty jprop, bool defaultLeaveRedaction)
+        {
+            if (redactObject[jprop.Name].Type == JTokenType.Boolean)
+            {
+                // this is good, already set, simply ignore
+            }
+            else if (redactObject[jprop.Name].Type == JTokenType.Array || redactObject[jprop.Name].Type == JTokenType.Object)
+            {
+                // fill recursively
+                RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
+            }
+            else
+            {
+                // existing redaction setting that is neither array nor object and not a bool value should not be the case
+                throw new ArgumentException("We expect bool values or arrays or objects here.");
+            }
+        }
+
+        private static void HandleMissingProperty(JObject redactObject, JProperty jprop, bool defaultLeaveRedaction)
+        {
+            switch (jprop.Value.Type)
+            {
+                // leaf values should simply produce a default redaction behaviour
+                case JTokenType.None:
+                case JTokenType.Integer:
+                case JTokenType.Float:
+                case JTokenType.String:
+                case JTokenType.Boolean:
+                case JTokenType.Null:
+                case JTokenType.Undefined:
+                case JTokenType.Date:
+                case JTokenType.Raw:
+                case JTokenType.Bytes:
+                case JTokenType.Guid:
+                case JTokenType.Uri:
+                case JTokenType.TimeSpan:
+                    redactObject[jprop.Name] = defaultLeaveRedaction;
+                    break;
+
+                // missing objects should be created and recursively populated
+                case JTokenType.Object:
+                    redactObject[jprop.Name] = new JObject();
+                    RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
+                    break;
+
+                case JTokenType.Array:
+                    redactObject[jprop.Name] = new JArray();
+                    RecursiveExtendStructureWithDefault(redactObject[jprop.Name], jprop.Value, defaultLeaveRedaction);
+                    break;
+                default:
+                    throw new ArgumentException("This token type should not be reachable.");
+            }
+        }
+
+        private static void HandleArrayType(JToken redactSettings, JToken json, bool defaultLeaveRedaction)
+        {
+            var jsonArray = (JArray)json;
+            var redactArray = (JArray)redactSettings;
+
+            // add missing entries with proper type to add default values
+            if (redactArray.Count < jsonArray.Count)
+            {
+                AddMissingEntries(redactArray, jsonArray, defaultLeaveRedaction);
+            }
+
+            for (int i = 0; i < redactArray.Count; ++i)
+            {
+                if (redactArray[i].Type == JTokenType.Array || redactArray[i].Type == JTokenType.Object)
+                    RecursiveExtendStructureWithDefault(redactArray[i], jsonArray[i], defaultLeaveRedaction);
+            }
+        }
+
+        private static void AddMissingEntries(JArray redactArray, JArray jsonArray, bool defaultLeaveRedaction)
+        {
+            // add nodes of proper type to the array
+            // value nodes should get the redaction bool setting arrays and objects should be emtpy
+            for (int vi = redactArray.Count; vi < jsonArray.Count; ++vi)
+            {
+                var vijson = jsonArray[vi];
+                switch (vijson.Type)
+                {
+                    // leaf values should simply produce a default redaction behaviour
+                    case JTokenType.None:
+                    case JTokenType.Integer:
+                    case JTokenType.Float:
+                    case JTokenType.String:
+                    case JTokenType.Boolean:
+                    case JTokenType.Null:
+                    case JTokenType.Undefined:
+                    case JTokenType.Date:
+                    case JTokenType.Raw:
+                    case JTokenType.Bytes:
+                    case JTokenType.Guid:
+                    case JTokenType.Uri:
+                    case JTokenType.TimeSpan:
+                        redactArray.Add(defaultLeaveRedaction);
+                        break;
+
+                    // missing objects should be created
+                    case JTokenType.Object:
+                        redactArray.Add(new JObject());
+                        break;
+
+                    case JTokenType.Array:
+                        redactArray.Add(new JArray());
+                        break;
+                    default:
+                        throw new ArgumentException("This token type should not be reachable.");
+                }
+            } 
         }
 
         private static JToken RecursiveEvaluateCommands(JToken redactSettings, JToken json)

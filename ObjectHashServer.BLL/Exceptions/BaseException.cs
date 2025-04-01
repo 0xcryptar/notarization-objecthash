@@ -11,12 +11,6 @@ namespace ObjectHashServer.BLL.Exceptions
                 base.Data.Add("innerException", innerException);
         }
 
-        protected BaseException(string message, IEnumerable additionalData)
-            : base(message)
-        {
-            base.Data.Add("additionalData", additionalData);
-        }
-
         protected BaseException(string message, IEnumerable additionalData, Exception innerException = null)
             : base(message, innerException)
         {

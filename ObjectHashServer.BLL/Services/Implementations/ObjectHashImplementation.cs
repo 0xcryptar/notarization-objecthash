@@ -326,6 +326,11 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 return "+0:";
             }
 
+            return HandleNotSpecialValue(d);
+        }
+
+        private static string HandleNotSpecialValue(double d)
+        {
             StringBuilder sb = new StringBuilder();
             sb.Append(d < 0.0 ? '-' : '+');
             if (d < 0.0) d = -d;
@@ -347,7 +352,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
 
             if (d > 1 || d <= 0.5)
             {
-                throw new Exception("wrong range for mantissa");
+                throw new ArgumentException("wrong range for mantissa");
             }
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
@@ -365,12 +370,12 @@ namespace ObjectHashServer.BLL.Services.Implementations
 
                 if (d >= 1)
                 {
-                    throw new Exception("oops, f is too big");
+                    throw new ArgumentException("oops, f is too big");
                 }
 
                 if (sb.Length > 1000)
                 {
-                    throw new Exception("things have got out of hand");
+                    throw new ArgumentException("things have got out of hand");
                 }
 
                 d *= 2;
