@@ -14,6 +14,7 @@ namespace ObjectHashServer.BLL.Utils
     /// Exception handling middleware. This code is based on:
     /// https://github.com/bitwarden/server/blob/86aa342bad71c90a076aae6ca7f254eb5d6b8c7d/src/Api/Utilities/ExceptionHandlerFilterAttribute.cs
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum | AttributeTargets.Interface | AttributeTargets.Delegate)]
     public class ExceptionHandlerFilterAttribute : ExceptionFilterAttribute
     {
         public override void OnException(ExceptionContext context)

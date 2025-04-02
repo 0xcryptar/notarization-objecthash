@@ -43,4 +43,4 @@ SentrySdk.Init(options =>
     options.AutoSessionTracking = true;
 });
 
-host.Run();
+await host.RunAsync();

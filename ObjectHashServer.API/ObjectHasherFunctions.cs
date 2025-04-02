@@ -27,7 +27,7 @@ namespace ObjectHashServer.API
         [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(JObject), Description = "Json for which the salts should be generated.", Required = true)]
         [OpenApiParameter(name: "generateSalts", In = ParameterLocation.Query, Required = true, Type = typeof(bool), Description = "Generate salts?")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ObjectHashResponseModel), Description = "The generated/hashed result for the given json.")]
-        public async Task<IActionResult> HashObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "hash-object")] HttpRequest req)
+        public static async Task<IActionResult> HashObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "hash-object")] HttpRequest req)
         {
             try
             {
@@ -37,14 +37,14 @@ namespace ObjectHashServer.API
                 if (!bool.TryParse(req.Query["generateSalts"], out generateSalts))
                     generateSalts = true;
 
-                ObjectHashRequestModel requestModel = null;
-                JObject jsonObject = null;
+                ObjectBaseRequestModel? requestModel = null;
+                JObject? jsonObject = null;
 
                 try
                 {
                     string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                     jsonObject = JObject.Parse(requestBody);
-                    requestModel = new ObjectHashRequestModel() { Data = jsonObject, Salts = null };
+                    requestModel = new ObjectBaseRequestModel() { Data = jsonObject, Salts = null };
                 }
                 catch (Exception e)
                 {
@@ -79,16 +79,16 @@ namespace ObjectHashServer.API
         [OpenApiOperation(operationId: "rehash-object", Description = "Generates the hash for the recieved ObjectBaseRequestModel.")]
         [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(ObjectBaseRequestModel), Description = "ObjectBaseRequestModel for which the hash should be generated.", Required = true)]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ObjectHashResponseModel), Description = "The generated ObjectHashResponseModel containing the generated hash.")]
-        public async Task<IActionResult> ReHashObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "rehash-object")] HttpRequest req)
+        public static async Task<IActionResult> ReHashObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "rehash-object")] HttpRequest req)
         {
             try
             {
-                ObjectHashRequestModel requestModel = null;
+                ObjectBaseRequestModel? requestModel = null;
 
                 try
                 {
                     string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-                    requestModel = JsonConvert.DeserializeObject<ObjectHashRequestModel>(requestBody);
+                    requestModel = JsonConvert.DeserializeObject<ObjectBaseRequestModel>(requestBody);
                 }
                 catch (Exception e)
                 {
@@ -118,11 +118,11 @@ namespace ObjectHashServer.API
         [OpenApiOperation(operationId: "redact-object", Description = "Calculates the redacted JSON given a settings file.")]
         [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(ObjectRedactionRequestModel), Description = "ObjectRedactionRequestModel for which the redacted JSON should be calculated.", Required = true)]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ObjectRedactionResponseModel), Description = "ObjectRedactionResponseModel containing the redacted JSON.")]
-        public async Task<IActionResult> RedactObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "redact-object")] HttpRequest req)
+        public static async Task<IActionResult> RedactObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "redact-object")] HttpRequest req)
         {
             try
             {
-                ObjectRedactionRequestModel requestModel = null;
+                ObjectRedactionRequestModel? requestModel = null;
 
                 try
                 {
@@ -136,7 +136,7 @@ namespace ObjectHashServer.API
                     return result;
                 }
 
-                ObjectRedactionImplementation.RedactJToken(requestModel.Data, requestModel.RedactSettings, requestModel.Salts);
+                ObjectRedactionImplementation.RedactJToken(requestModel!.Data, requestModel.RedactSettings, requestModel.Salts);
                 return new OkObjectResult(new ObjectRedactionResponseModel(new ObjectRedaction(requestModel)));
             }
             catch (Exception e)
