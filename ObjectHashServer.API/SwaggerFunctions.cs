@@ -37,9 +37,9 @@ namespace ObjectHashServer.API
             }
             catch (Exception e)
             {
-                var result = new ObjectResult(e);
-                result.StatusCode = StatusCodes.Status500InternalServerError;
-                return null;
+                var ret = req.CreateResponse(HttpStatusCode.InternalServerError);
+                ret.Content = new StringContent(e.ToString());
+                return ret;
             }
         }
 
@@ -61,9 +61,9 @@ namespace ObjectHashServer.API
                 HttpResponseMessage response = await client.GetAsync(NotarizationAPIURL + "/openapi/" + version + "." + extension);
                 string json = await response.Content.ReadAsStringAsync();
 
-                JObject swagger = JObject.Parse(json);
-                JArray servers = (JArray)swagger.SelectToken("servers");
-                servers.Clear();
+                JObject? swagger = JObject.Parse(json);
+                JArray? servers = (JArray?)swagger.SelectToken("servers");
+                servers!.Clear();
                 JObject url = new JObject();
                 url.Add("url", "api.cryptar.de");
                 servers.Add(url);
@@ -126,13 +126,13 @@ namespace ObjectHashServer.API
                 {
                     Content = content.Replace("https://notarization-objecthash.azurewebsites.net/api/swagger.json", "https://api.cryptar.de/JSON2hash/swagger.json"),
                     ContentType = "text/html"
-                }; ;
+                };
             }
             catch (Exception e)
             {
                 var result = new ObjectResult(e);
                 result.StatusCode = StatusCodes.Status500InternalServerError;
-                return null;
+                return result;
             }
         }
     }

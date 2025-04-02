@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ObjectHashServer.BLL.Utils
 {
-    public static class HexConverter
+    public static partial class HexConverter
     {
         public static string ToHex(byte[] ba)
         {
@@ -25,6 +26,9 @@ namespace ObjectHashServer.BLL.Utils
                  .ToArray();
         }
 
+        [GeneratedRegex(@"\A\b[0-9a-fA-F]+\b\Z")]
+        private static partial Regex RegexExpression();
+
         public static void ValidateStringIsHexAndBlockLength(JToken objectVal)
         {
             string hash;
@@ -37,7 +41,7 @@ namespace ObjectHashServer.BLL.Utils
                 throw new BadRequestException("The provided hash or salt is not a valid string.");
             }
 
-            if (hash.Length != (Globals.HASH_ALGORITHM_BLOCK_SIZE * 2) || !System.Text.RegularExpressions.Regex.IsMatch(hash, @"\A\b[0-9a-fA-F]+\b\Z"))
+            if (hash.Length != (Globals.HASH_ALGORITHM_BLOCK_SIZE * 2) || !RegexExpression().IsMatch(hash))
             {
                 throw new BadRequestException($"The provided hash or salt is not a valid {Globals.HASH_ALGORITHM} ({Globals.HASH_ALGORITHM_BLOCK_SIZE * 2} characters, hex only)");
             }

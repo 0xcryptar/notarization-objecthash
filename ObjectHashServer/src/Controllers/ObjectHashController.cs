@@ -11,7 +11,7 @@ namespace ObjectHashServer.Controllers
     public class ObjectHashController : ControllerBase
     {
         [HttpPost]
-        public ActionResult<ObjectHashResponseModel> Post([FromBody] ObjectHashRequestModel model, [FromQuery] bool generateSalts)
+        public ActionResult<ObjectHashResponseModel> Post([FromBody] ObjectBaseRequestModel model, [FromQuery] bool generateSalts)
         {
             if (generateSalts)
             {

@@ -204,7 +204,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
             }
         }
 
-        private static JToken RecursiveEvaluateJArray(JArray redactSettings, JToken json)
+        private static JArray RecursiveEvaluateJArray(JArray redactSettings, JToken json)
         {
             JArray result = new JArray();
             for (int i = 0; i < Math.Min(redactSettings.Count, json.Count()); i++)
@@ -215,7 +215,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
             return result;
         }
 
-        private static JToken RecursiveEvaluateJObject(JObject redactSettings, JToken json)
+        private static JObject RecursiveEvaluateJObject(JObject redactSettings, JToken json)
         {
             JObject result = new JObject();
             foreach ((string key, JToken jToken) in redactSettings)
