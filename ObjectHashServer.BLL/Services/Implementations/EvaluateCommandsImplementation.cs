@@ -2,7 +2,6 @@ using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
 using System.Collections;
 using System.Runtime.CompilerServices;
-using System.Text.Json.Nodes;
 
 [assembly: InternalsVisibleToAttribute("ObjectHashServer.UnitTests")]
 
@@ -176,7 +175,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
                     default:
                         throw new ArgumentException("This token type should not be reachable.");
                 }
-            } 
+            }
         }
 
         private static JToken RecursiveEvaluateCommands(JToken redactSettings, JToken json)

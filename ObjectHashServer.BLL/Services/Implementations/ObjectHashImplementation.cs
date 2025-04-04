@@ -25,7 +25,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
         public ObjectHashImplementation()
         {
             Hash = new byte[Globals.HASH_ALGORITHM_BLOCK_SIZE];
-            _digester = HashAlgorithm.Create(Globals.HASH_ALGORITHM);
+            _digester = HashHelper.CreateHashAlgorithm(Globals.HASH_ALGORITHM);
             _memoryStream = new MemoryStream();
         }
 
@@ -321,10 +321,12 @@ namespace ObjectHashServer.BLL.Services.Implementations
             }
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
+#pragma warning disable S1244 // Floating point numbers should not be tested for equality
             if (d == 0.0)
             {
                 return "+0:";
             }
+#pragma warning restore S1244 // Floating point numbers should not be tested for equality
 
             return HandleNotSpecialValue(d);
         }
@@ -356,6 +358,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
             }
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
+#pragma warning disable S1244 // Floating point numbers should not be tested for equality
             while (d != 0)
             {
                 if (d >= 1)
@@ -380,6 +383,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
 
                 d *= 2;
             }
+#pragma warning restore S1244 // Floating point numbers should not be tested for equality
 
             return sb.ToString();
         }
