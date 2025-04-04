@@ -8,6 +8,8 @@ namespace ObjectHashServer.BLL.Services.Implementations
 {
     public static class GenerateSaltsImplementation
     {
+        private static Random Random = new Random();
+
         public static void SetRandomSaltsForObjectBaseRequestModel(ObjectBaseRequestModel model)
         {
             if (!model.Salts.IsNullOrEmpty())
@@ -63,9 +65,8 @@ namespace ObjectHashServer.BLL.Services.Implementations
         // static methods //
         private static string GenerateSaltForLeaf()
         {
-            Random random = new Random();
             byte[] buffer = new byte[Globals.HASH_ALGORITHM_BLOCK_SIZE];
-            random.NextBytes(buffer);
+            Random.NextBytes(buffer);
             return HexConverter.ToHex(buffer);
         }
 
