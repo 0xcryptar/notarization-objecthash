@@ -3,13 +3,12 @@ using ObjectHashServer.BLL.Exceptions;
 using ObjectHashServer.BLL.Models.Api.Request;
 using ObjectHashServer.BLL.Models.Extensions;
 using ObjectHashServer.BLL.Utils;
+using System.Security.Cryptography;
 
 namespace ObjectHashServer.BLL.Services.Implementations
 {
     public static class GenerateSaltsImplementation
     {
-        private static Random Random = new Random();
-
         public static void SetRandomSaltsForObjectBaseRequestModel(ObjectBaseRequestModel model)
         {
             if (!model.Salts.IsNullOrEmpty())
@@ -65,8 +64,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
         // static methods //
         private static string GenerateSaltForLeaf()
         {
-            byte[] buffer = new byte[Globals.HASH_ALGORITHM_BLOCK_SIZE];
-            Random.NextBytes(buffer);
+            byte[] buffer = RandomNumberGenerator.GetBytes(Globals.HASH_ALGORITHM_BLOCK_SIZE);
             return HexConverter.ToHex(buffer);
         }
 
