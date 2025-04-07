@@ -13,7 +13,7 @@ using System.Net;
 
 namespace ObjectHashServer.API
 {
-    public class ObjectHasherFunctions
+    public static class ObjectHasherFunctions
     {
         /// <summary>
         /// Generates Salts for the recieved ObjectBaseRequestModel.
