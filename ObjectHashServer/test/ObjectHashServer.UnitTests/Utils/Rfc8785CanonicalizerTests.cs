@@ -16,11 +16,13 @@ namespace ObjectHashServer.UnitTests.Utils
         [Test]
         public void Canonicalize_OfficialRfc8785Section322Example_ShouldMatchOfficialOutput()
         {
-            string rawJson = @"{
-                ""numbers"": [333333333.33333329, 1E30, 4.50, 2e-3, 0.000000000000000000000000001],
-                ""string"": ""\u20ac$\u000F\u000aA'\u0042\u0022\u005c\\\"\"/"",
-                ""literals"": [null, true, false]
-            }";
+            string rawJson = """
+            {
+                "numbers": [333333333.33333329, 1E30, 4.50, 2e-3, 0.000000000000000000000000001],
+                "string": "\u20ac$\u000F\u000aA'\u0042\u0022\u005c\\\"/",
+                "literals": [null, true, false]
+            }
+            """;
 
             JToken token = JToken.Parse(rawJson);
             string canonical = Rfc8785Canonicalizer.Canonicalize(token);
@@ -33,15 +35,17 @@ namespace ObjectHashServer.UnitTests.Utils
         [Test]
         public void Canonicalize_OfficialRfc8785PropertySortingTest_ShouldSortKeysByUtf16CodeUnits()
         {
-            string rawJson = @"{
-                ""\u20ac"": ""Euro Sign"",
-                ""\r"": ""Carriage Return"",
-                ""\ufb33"": ""Hebrew Letter Dalet With Dagesh"",
-                ""1"": ""One"",
-                ""\ud83d\ude00"": ""Emoji: Grinning Face"",
-                ""\u0080"": ""Control"",
-                ""\u00f6"": ""Latin Small Letter O With Diaeresis""
-            }";
+            string rawJson = """
+            {
+                "\u20ac": "Euro Sign",
+                "\r": "Carriage Return",
+                "\ufb33": "Hebrew Letter Dalet With Dagesh",
+                "1": "One",
+                "\ud83d\ude00": "Emoji: Grinning Face",
+                "\u0080": "Control",
+                "\u00f6": "Latin Small Letter O With Diaeresis"
+            }
+            """;
 
             JToken token = JToken.Parse(rawJson);
             string canonical = Rfc8785Canonicalizer.Canonicalize(token);
@@ -66,11 +70,13 @@ namespace ObjectHashServer.UnitTests.Utils
         [Test]
         public void ComputeHash_OfficialRfc8785Bytes_ShouldMatchSha256Digest()
         {
-            string rawJson = @"{
-                ""numbers"": [333333333.33333329, 1E30, 4.50, 2e-3, 0.000000000000000000000000001],
-                ""string"": ""\u20ac$\u000F\u000aA'\u0042\u0022\u005c\\\"\"/"",
-                ""literals"": [null, true, false]
-            }";
+            string rawJson = """
+            {
+                "numbers": [333333333.33333329, 1E30, 4.50, 2e-3, 0.000000000000000000000000001],
+                "string": "\u20ac$\u000F\u000aA'\u0042\u0022\u005c\\\"/",
+                "literals": [null, true, false]
+            }
+            """;
 
             JToken token = JToken.Parse(rawJson);
             byte[] hashBytes = Rfc8785Canonicalizer.ComputeHash(token);
