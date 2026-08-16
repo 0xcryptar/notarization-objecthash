@@ -23,10 +23,12 @@ namespace ObjectHashServer.API
         /// <response code="404">Not Found</response>
         /// <response code="500">Internal Server Error</response>
         [Function("HashObject")]
-        [OpenApiOperation(operationId: "hash-object", Description = "Generates salts for the recieved json.")]
-        [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(JObject), Description = "Json for which the salts should be generated.", Required = true)]
-        [OpenApiParameter(name: "generateSalts", In = ParameterLocation.Query, Required = true, Type = typeof(bool), Description = "Generate salts?")]
-        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ObjectHashResponseModel), Description = "The generated/hashed result for the given json.")]
+        [OpenApiOperation(operationId: "hash-object", Description = "Generates salts and computes the hash for the received JSON payload.")]
+        [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(JObject), Description = "JSON object for which salts and hash should be generated.", Required = true)]
+        [OpenApiParameter(name: "generateSalts", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "Generate random salts for JSON leaf nodes? (default: true)")]
+        [OpenApiParameter(name: "algorithm", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Hashing algorithm: cryptar-v1-sha256 (default), cryptar-v1-sha512, cryptar-v1-blake3, rfc8785-v1-sha256, rfc8785-v1-sha512, rfc8785-v1-blake3")]
+        [OpenApiParameter(name: "saltBitLength", In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "Salt bit length: 128 or 256 (default: 256)")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ObjectHashResponseModel), Description = "The generated salts and hash result for the given JSON.")]
         public static async Task<IActionResult> HashObject([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "hash-object")] HttpRequest req)
         {
             try
@@ -37,6 +39,14 @@ namespace ObjectHashServer.API
                 if (!bool.TryParse(req.Query["generateSalts"], out generateSalts))
                     generateSalts = true;
 
+                string? algorithm = req.Query["algorithm"];
+                if (string.IsNullOrEmpty(algorithm))
+                    algorithm = ObjectHashServer.BLL.Globals.ALGORITHM_NAME;
+
+                int saltBitLength = ObjectHashServer.BLL.Globals.DEFAULT_SALT_BIT_LENGTH;
+                if (int.TryParse(req.Query["saltBitLength"], out int parsedBitLength))
+                    saltBitLength = parsedBitLength;
+
                 ObjectBaseRequestModel? requestModel = null;
                 JObject? jsonObject = null;
 
@@ -44,7 +54,13 @@ namespace ObjectHashServer.API
                 {
                     string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
                     jsonObject = JObject.Parse(requestBody);
-                    requestModel = new ObjectBaseRequestModel() { Data = jsonObject, Salts = null };
+                    requestModel = new ObjectBaseRequestModel()
+                    {
+                        Data = jsonObject,
+                        Salts = null,
+                        Algorithm = algorithm,
+                        SaltBitLength = saltBitLength
+                    };
                 }
                 catch (Exception e)
                 {
