@@ -22,7 +22,6 @@
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\ObjectHashServer.BLL\ObjectHashServer.BLL.csproj" />
-		<ProjectReference Include="..\ObjectHashServer\src\ObjectHashServer.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="host.json">

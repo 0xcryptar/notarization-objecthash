@@ -20,7 +20,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\ObjectHashServer.csproj" />
+      <ProjectReference Include="..\..\..\ObjectHashServer.BLL\ObjectHashServer.BLL.csproj" />
+      <ProjectReference Include="..\..\..\ObjectHashServer.API\ObjectHashServer.API.csproj" />
     </ItemGroup>
 
 </Project>

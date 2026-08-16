@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using ObjectHashServer.BLL.Models;
 using ObjectHashServer.BLL.Models.Api.Request;
 using ObjectHashServer.BLL.Models.Api.Response;
