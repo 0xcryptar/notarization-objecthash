@@ -1,17 +1,19 @@
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using ObjectHashServer.BLL;
 using ObjectHashServer.BLL.Models;
 using ObjectHashServer.BLL.Models.Api.Request;
 using ObjectHashServer.BLL.Utils;
-using Xunit;
 
 namespace ObjectHashServer.UnitTests.Utils
 {
+    [TestFixture]
     public class Rfc8785CanonicalizerTests
     {
-        [Fact]
+        [Test]
         public void Canonicalize_OfficialRfc8785Section322Example_ShouldMatchOfficialOutput()
         {
             string rawJson = @"{
@@ -25,10 +27,10 @@ namespace ObjectHashServer.UnitTests.Utils
 
             string expectedCanonical = "{\"literals\":[null,true,false],\"numbers\":[333333333.3333333,1e+30,4.5,0.002,1e-27],\"string\":\"€$\\u000f\\nA'B\\\"\\\\\\\\\\\"/\"}";
 
-            Assert.Equal(expectedCanonical, canonical);
+            Assert.That(canonical, Is.EqualTo(expectedCanonical));
         }
 
-        [Fact]
+        [Test]
         public void Canonicalize_OfficialRfc8785PropertySortingTest_ShouldSortKeysByUtf16CodeUnits()
         {
             string rawJson = @"{
@@ -58,10 +60,10 @@ namespace ObjectHashServer.UnitTests.Utils
                 "\ufb33"
             };
 
-            Assert.Equal(expectedOrder, keysInOrder);
+            Assert.That(keysInOrder, Is.EqualTo(expectedOrder));
         }
 
-        [Fact]
+        [Test]
         public void ComputeHash_OfficialRfc8785Bytes_ShouldMatchSha256Digest()
         {
             string rawJson = @"{
@@ -74,16 +76,15 @@ namespace ObjectHashServer.UnitTests.Utils
             byte[] hashBytes = Rfc8785Canonicalizer.ComputeHash(token);
             string hashHex = HexConverter.ToHex(hashBytes);
 
-            // Compute reference SHA-256 over exact RFC canonical UTF-8 bytes
             string canonicalText = "{\"literals\":[null,true,false],\"numbers\":[333333333.3333333,1e+30,4.5,0.002,1e-27],\"string\":\"€$\\u000f\\nA'B\\\"\\\\\\\\\\\"/\"}";
             byte[] expectedBytes = Encoding.UTF8.GetBytes(canonicalText);
             using SHA256 sha = SHA256.Create();
             string expectedHex = HexConverter.ToHex(sha.ComputeHash(expectedBytes));
 
-            Assert.Equal(expectedHex, hashHex);
+            Assert.That(hashHex, Is.EqualTo(expectedHex));
         }
 
-        [Fact]
+        [Test]
         public void ObjectHash_AlgorithmSwitching_ShouldProduceDifferentHashesForCryptarAndRfc8785()
         {
             var json = JObject.Parse("{\"b\": 2, \"a\": 1}");
@@ -102,11 +103,10 @@ namespace ObjectHashServer.UnitTests.Utils
             };
             var rfc8785ObjectHash = new ObjectHash(rfc8785Request);
 
-            Assert.Equal("cryptar-v1-sha256", cryptarObjectHash.Algorithm);
-            Assert.Equal("rfc8785-v1-sha256", rfc8785ObjectHash.Algorithm);
+            Assert.That(cryptarObjectHash.Algorithm, Is.EqualTo("cryptar-v1-sha256"));
+            Assert.That(rfc8785ObjectHash.Algorithm, Is.EqualTo("rfc8785-v1-sha256"));
 
-            // Hashes must differ because cryptar uses Merkle tree tagged hashing, rfc8785 uses JCS text SHA256
-            Assert.NotEqual(cryptarObjectHash.Hash, rfc8785ObjectHash.Hash);
+            Assert.That(cryptarObjectHash.Hash, Is.Not.EqualTo(rfc8785ObjectHash.Hash));
         }
     }
 }
