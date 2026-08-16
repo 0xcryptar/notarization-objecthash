@@ -29,8 +29,8 @@ namespace ObjectHashServer.BLL.Utils
                 return longVal.ToString(CultureInfo.InvariantCulture);
             }
 
-            // Convert to string using invariant culture with round-trip G17 format
-            string str = d.ToString("G17", CultureInfo.InvariantCulture);
+            // Convert to string using invariant culture with shortest IEEE 754 representation
+            string str = d.ToString(CultureInfo.InvariantCulture);
 
             // Replace uppercase 'E' with lowercase 'e' for exponential notation
             if (str.Contains('E'))
