@@ -8,6 +8,7 @@ namespace ObjectHashServer.BLL
         public const string ALGORITHM_CRYPTAR_V1_SHA256 = "cryptar-v1-sha256";
         public const string ALGORITHM_RFC8785_V1_SHA256 = "rfc8785-v1-sha256";
         public const string ALGORITHM_NAME = ALGORITHM_CRYPTAR_V1_SHA256;
+        public const int DEFAULT_SALT_BIT_LENGTH = 256;
         public static readonly bool SORT_ARRAY = false;
         // see: https://github.com/benlaurie/objecthash/issues/52
         public static readonly bool COMMON_JSONIFY = true;

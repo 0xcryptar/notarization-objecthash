@@ -50,9 +50,9 @@ namespace ObjectHashServer.BLL.Utils
                     SerializeString((string)token, sb);
                     break;
                 case JTokenType.Integer:
-                    if (token.Type == JTokenType.Integer && token.StorageType == JValue.JValueType.Long)
+                    if (token is JValue jVal && jVal.Value is long longVal)
                     {
-                        sb.Append(((long)token).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                        sb.Append(longVal.ToString(System.Globalization.CultureInfo.InvariantCulture));
                     }
                     else
                     {

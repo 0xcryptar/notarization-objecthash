@@ -64,7 +64,7 @@ namespace ObjectHashServer.BLL.Utils
         {
             if (input.Length == 0)
             {
-                return CompressChunk(new byte[64], 0, 0, CHUNK_START | CHUNK_END | ROOT);
+                return ProcessChunk(new byte[64], 0, 0, 0, true);
             }
 
             int numChunks = (input.Length + 1023) / 1024;
