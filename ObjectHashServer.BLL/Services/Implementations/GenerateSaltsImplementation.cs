@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
 using ObjectHashServer.BLL.Models.Api.Request;
 using ObjectHashServer.BLL.Models.Extensions;
@@ -16,30 +16,30 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 throw new BadRequestException("You want to generate new salts but you send salts with the request. Please either generate new salts or send them with the request.");
             }
 
-            model.Salts = SaltsForJToken(model.Data);
+            model.Salts = SaltsForJToken(model.Data, model.SaltBitLength);
         }
 
-        private static JToken SaltsForJToken(JToken json)
+        public static JToken SaltsForJToken(JToken json, int saltBitLength = 256)
         {
             JToken jsonClone = json.DeepClone();
-            return RecursivelyOverrideJTokenWithSalts(jsonClone);
+            return RecursivelyOverrideJTokenWithSalts(jsonClone, saltBitLength);
         }
 
-        private static JToken RecursivelyOverrideJTokenWithSalts(JToken json)
+        private static JToken RecursivelyOverrideJTokenWithSalts(JToken json, int saltBitLength)
         {
             switch (json.Type)
             {
                 case JTokenType.Array:
                     {
-                        return OverrideArrayWithSalts((JArray)json);
+                        return OverrideArrayWithSalts((JArray)json, saltBitLength);
                     }
                 case JTokenType.Object:
                     {
-                        return OverrideObjectWithSalts((JObject)json);
+                        return OverrideObjectWithSalts((JObject)json, saltBitLength);
                     }
                 case JTokenType.String:
                     {
-                        return ((string)json).StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) ? "**REDACTED**" : GenerateSaltForLeaf();
+                        return ((string)json).StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) ? "**REDACTED**" : GenerateSaltForLeaf(saltBitLength);
                     }
                 case JTokenType.Integer:
                 case JTokenType.TimeSpan:
@@ -52,7 +52,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
                 case JTokenType.Bytes:
                 case JTokenType.Date:
                     {
-                        return GenerateSaltForLeaf();
+                        return GenerateSaltForLeaf(saltBitLength);
                     }
                 default:
                     {
@@ -62,28 +62,34 @@ namespace ObjectHashServer.BLL.Services.Implementations
         }
 
         // static methods //
-        private static string GenerateSaltForLeaf()
+        private static string GenerateSaltForLeaf(int saltBitLength = 256)
         {
-            byte[] buffer = RandomNumberGenerator.GetBytes(Globals.HASH_ALGORITHM_BLOCK_SIZE);
+            if (saltBitLength != 128 && saltBitLength != 256)
+            {
+                throw new BadRequestException("Salt bit length must be either 128 or 256 bits.");
+            }
+
+            int byteLength = saltBitLength / 8;
+            byte[] buffer = RandomNumberGenerator.GetBytes(byteLength);
             return HexConverter.ToHex(buffer);
         }
 
-        private static JArray OverrideArrayWithSalts(JArray array)
+        private static JArray OverrideArrayWithSalts(JArray array, int saltBitLength)
         {
             JArray result = new JArray();
             foreach (JToken jToken in array)
             {
-                result.Add(RecursivelyOverrideJTokenWithSalts(jToken));
+                result.Add(RecursivelyOverrideJTokenWithSalts(jToken, saltBitLength));
             }
             return result;
         }
 
-        private static JObject OverrideObjectWithSalts(JObject obj)
+        private static JObject OverrideObjectWithSalts(JObject obj, int saltBitLength)
         {
             JObject result = new JObject();
             foreach ((string key, JToken jToken) in obj)
             {
-                result[key] = RecursivelyOverrideJTokenWithSalts(jToken);
+                result[key] = RecursivelyOverrideJTokenWithSalts(jToken, saltBitLength);
             }
             return result;
         }

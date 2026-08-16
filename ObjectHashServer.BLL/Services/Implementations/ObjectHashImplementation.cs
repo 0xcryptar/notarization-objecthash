@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Exceptions;
 using ObjectHashServer.BLL.Models.Extensions;
 using ObjectHashServer.BLL.Utils;
@@ -21,11 +21,14 @@ namespace ObjectHashServer.BLL.Services.Implementations
         private byte[] Hash { get; set; }
         private readonly HashAlgorithm _digester;
         private readonly MemoryStream _memoryStream;
+        private readonly HashAlgorithmType _algorithmType;
 
-        public ObjectHashImplementation()
+        public ObjectHashImplementation(HashAlgorithmType algorithm = HashAlgorithmType.SHA256)
         {
-            Hash = new byte[Globals.HASH_ALGORITHM_BLOCK_SIZE];
-            _digester = HashHelper.CreateHashAlgorithm(Globals.HASH_ALGORITHM);
+            _algorithmType = algorithm;
+            _digester = HashHelper.CreateHashAlgorithm(algorithm);
+            int digestSizeInBytes = _digester.HashSize / 8;
+            Hash = new byte[digestSizeInBytes];
             _memoryStream = new MemoryStream();
         }
 
@@ -131,10 +134,10 @@ namespace ObjectHashServer.BLL.Services.Implementations
 
             if (salt != null)
             {
-                // validate the salt is hex and block size long
+                // validate the salt is hex
                 HexConverter.ValidateStringIsHexAndBlockLength(salt);
                 // hash salt to equally distribute randomness
-                ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
+                ObjectHashImplementation jKeyHash = new ObjectHashImplementation(_algorithmType);
                 jKeyHash.HashString((string)salt);
                 // merge salt and object hash as list
                 byte[][] hashList = new byte[2][];
@@ -156,9 +159,9 @@ namespace ObjectHashServer.BLL.Services.Implementations
 
         private void HashString(string str, JToken salt = null)
         {
-            if (str.StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) && str.Length == 76)
+            if (str.StartsWith("**REDACTED**", Globals.STRING_COMPARE_METHOD) && str.Length > 12)
             {
-                Hash = HexConverter.HashFromHex(str.Substring(12, str.Length - 12));
+                Hash = HexConverter.HashFromHex(str.Substring(12));
             }
             else
             {
@@ -209,7 +212,7 @@ namespace ObjectHashServer.BLL.Services.Implementations
             byte[][] hashList = new byte[array.Count][];
             for (int i = 0; i < array.Count; i++)
             {
-                ObjectHashImplementation aElementHash = new ObjectHashImplementation();
+                ObjectHashImplementation aElementHash = new ObjectHashImplementation(_algorithmType);
                 aElementHash.HashJToken(array[i], salts.IsNullOrEmpty() ? null : salts[i]);
                 hashList[i] = aElementHash.Hash;
             }
@@ -237,12 +240,10 @@ namespace ObjectHashServer.BLL.Services.Implementations
                         additionalExceptionData);
                 }
 
-                ObjectHashImplementation jKeyHash = new ObjectHashImplementation();
+                ObjectHashImplementation jKeyHash = new ObjectHashImplementation(_algorithmType);
                 jKeyHash.HashString(key);
-                // TODO: check if acceptable
-                // object keys are not salted, i don't see a big issue alternative would be jKeyHash.HashString(SALT + o.Key); but its quite difficult for an user to store the salts for object keys
 
-                ObjectHashImplementation jValHash = new ObjectHashImplementation();
+                ObjectHashImplementation jValHash = new ObjectHashImplementation(_algorithmType);
                 jValHash.HashJToken(value, salts.IsNullOrEmpty() ? null : salts[key]);
 
                 // merge both hashes (of key and value)
@@ -296,97 +297,14 @@ namespace ObjectHashServer.BLL.Services.Implementations
         }
 
         /// <summary>
-        /// Normalizes a float/double. This function was taken from
-        /// https://github.com/benlaurie/objecthash
+        /// Normalizes a float/double according to RFC 8785 (JCS) Section 3.2.2 (ECMAScript ES6 ToString(Number) rules).
+        /// This modernizes Ben Laurie's Merkle-tree hashing with standard RFC 8785 number formatting (cryptar-v1-sha256).
         /// </summary>
         /// <returns>String of the normalized double</returns>
         /// <param name="d">Input value</param>
-#pragma warning disable RECS0018 // Comparison of floating point numbers with equality operator
         private static string NormalizeDouble(double d)
         {
-            // Early outs for special cases like NaN, +/- infinity or equality to 0
-            if (double.IsNaN(d))
-            {
-                return "NaN";
-            }
-
-            if (double.IsPositiveInfinity(d))
-            {
-                return "Infinity";
-            }
-
-            if (double.IsNegativeInfinity(d))
-            {
-                return "-Infinity";
-            }
-
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-#pragma warning disable S1244 // Floating point numbers should not be tested for equality
-            if (d == 0.0)
-            {
-                return "+0:";
-            }
-#pragma warning restore S1244 // Floating point numbers should not be tested for equality
-
-            return HandleNotSpecialValue(d);
+            return JcsNumberFormatter.FormatNumber(d);
         }
-
-        private static string HandleNotSpecialValue(double d)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.Append(d < 0.0 ? '-' : '+');
-            if (d < 0.0) d = -d;
-            int e = 0;
-            while (d > 1)
-            {
-                d /= 2;
-                e += 1;
-            }
-
-            while (d <= 0.5)
-            {
-                d *= 2;
-                e -= 1;
-            }
-
-            sb.Append(e);
-            sb.Append(':');
-
-            if (d > 1 || d <= 0.5)
-            {
-                throw new ArgumentException("wrong range for mantissa");
-            }
-
-            // ReSharper disable once CompareOfFloatsByEqualityOperator
-#pragma warning disable S1244 // Floating point numbers should not be tested for equality
-            while (d != 0)
-            {
-                if (d >= 1)
-                {
-                    sb.Append('1');
-                    d -= 1;
-                }
-                else
-                {
-                    sb.Append('0');
-                }
-
-                if (d >= 1)
-                {
-                    throw new ArgumentException("oops, f is too big");
-                }
-
-                if (sb.Length > 1000)
-                {
-                    throw new ArgumentException("things have got out of hand");
-                }
-
-                d *= 2;
-            }
-#pragma warning restore S1244 // Floating point numbers should not be tested for equality
-
-            return sb.ToString();
-        }
-#pragma warning restore RECS0018 // Comparison of floating point numbers with equality operator
     }
 }

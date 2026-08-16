@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using ObjectHashServer.BLL.Models.Api.Request;
 
 namespace ObjectHashServer.BLL.Models.Api.Response
@@ -6,7 +6,9 @@ namespace ObjectHashServer.BLL.Models.Api.Response
     public class ObjectRedactionResponseModel : ResponseModel
     {
         public ObjectRedactionResponseModel() : base("objectRedaction")
-        { }
+        {
+            Algorithm = Globals.ALGORITHM_NAME;
+        }
 
         public ObjectRedactionResponseModel(ObjectRedaction objectRedaction) : this()
         {
@@ -14,10 +16,12 @@ namespace ObjectHashServer.BLL.Models.Api.Response
             Data = oh.Data;
             Salts = oh.Salts;
             Hash = oh.Hash;
+            Algorithm = oh.Algorithm;
         }
 
         public JToken Data { get; set; }
         public JToken Salts { get; set; }
         public string Hash { get; set; }
+        public string Algorithm { get; set; }
     }
 }
